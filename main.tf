@@ -1,6 +1,7 @@
+#tfsec:ignore:AWS016 This SNS topic  is for observability
 resource "aws_sns_topic" "ecs_events" {
-  name = "${local.project_name}-ecs-events"
-  tags = local.tags
+  name_prefix = "ecs_events_${var.ecs_cluster_name}"
+  tags        = var.tags
 }
 
 data "aws_iam_policy_document" "sns_ecs_events" {
@@ -25,7 +26,7 @@ resource "aws_sns_topic_policy" "ecs_events" {
 }
 
 resource "aws_cloudwatch_event_rule" "ecs_task" {
-  name          = "${local.project_name}-ecs-task"
+  name_prefix   = "ecs_task_${var.ecs_cluster_name}"
   event_pattern = <<EOF
 {
   "source": [
@@ -36,24 +37,19 @@ resource "aws_cloudwatch_event_rule" "ecs_task" {
   ],
   "detail": {
     "clusterArn": [
-      "${aws_ecs_cluster.this.arn}"
+      "${data.aws_ecs_cluster.this.arn}"
     ],
     "lastStatus": [
-      "PROVISIONING",
-      "PENDING",
-      "ACTIVATING",
-      "RUNNING",
-      "DEACTIVATING",
       "STOPPED"
     ]
   }
 }
 EOF
-  tags          = local.tags
+  tags          = var.tags
 }
 
 resource "aws_cloudwatch_event_rule" "ecs_service" {
-  name          = "${local.project_name}-ecs-service"
+  name_prefix   = "ecs_service_${var.ecs_cluster_name}"
   event_pattern = <<EOF
 {
   "source": [
@@ -64,16 +60,20 @@ resource "aws_cloudwatch_event_rule" "ecs_service" {
   ],
   "detail": {
     "clusterArn": [
-      "${aws_ecs_cluster.this.arn}"
+      "${data.aws_ecs_cluster.this.arn}"
+    ],
+    "eventType": [
+      "WARN",
+      "ERROR"
     ]
   }
 }
 EOF
-  tags          = local.tags
+  tags          = var.tags
 }
 
 resource "aws_cloudwatch_event_rule" "ecs_deployment" {
-  name          = "${local.project_name}-ecs-deployment"
+  name_prefix   = "ecs_deployment_${var.ecs_cluster_name}"
   event_pattern = <<EOF
 {
   "source": [
@@ -81,35 +81,39 @@ resource "aws_cloudwatch_event_rule" "ecs_deployment" {
   ],
   "detail-type": [
     "ECS Deployment State Change"
-  ]
+  ],
+  "detail": {
+    "eventType": [
+      "ERROR"
+    ]
+  }
 }
 EOF
-  tags          = local.tags
+  tags          = var.tags
 }
 
 resource "aws_cloudwatch_event_target" "ecs_task" {
-  target_id = "${local.project_name}-${aws_sns_topic.ecs_events.name}-task"
+  target_id = "ecs_task_${var.ecs_cluster_name}"
   arn       = aws_sns_topic.ecs_events.arn
   rule      = aws_cloudwatch_event_rule.ecs_task.name
 }
 
 resource "aws_cloudwatch_event_target" "ecs_service" {
-  target_id = "${local.project_name}-${aws_sns_topic.ecs_events.name}-service"
+  target_id = "ecs_service_${var.ecs_cluster_name}"
   arn       = aws_sns_topic.ecs_events.arn
   rule      = aws_cloudwatch_event_rule.ecs_service.name
 }
 
 resource "aws_cloudwatch_event_target" "ecs_deployment" {
-  target_id = "${local.project_name}-${aws_sns_topic.ecs_events.name}-deployment"
+  target_id = "ecs_deployment_${var.ecs_cluster_name}"
   arn       = aws_sns_topic.ecs_events.arn
   rule      = aws_cloudwatch_event_rule.ecs_deployment.name
 }
 
-
 module "slack_notifications" {
   source                            = "terraform-aws-modules/lambda/aws"
-  version                           = "1.44.0"
-  function_name                     = "${local.project_name}-slack-notifications"
+  version                           = "2.5.0"
+  function_name                     = "ecs_slack_notifications_${var.ecs_cluster_name}"
   description                       = "Used to receive events from EventBridge via SNS and send them to Slack"
   handler                           = "slack_notifications.lambda_handler"
   source_path                       = "${path.module}/functions/slack_notifications.py"
@@ -124,14 +128,17 @@ module "slack_notifications" {
     }
   }
   environment_variables = {
-    HOOK_URL   = jsondecode(data.aws_secretsmanager_secret_version.external_secrets.secret_string)["slack_webhook_url"]
-    LOG_EVENTS = "True"
+    SKIP_TASK_STOP_CODES      = join(",", var.skip_task_stop_codes)
+    SKIP_TASK_STOPPED_REASONS = join(",", var.skip_task_stopped_reasons)
+    HOOK_URL                  = var.slack_hook_url
+    LOG_EVENTS                = "True" # For enable please use - "True"
   }
-  tags = local.tags
+  tags = var.tags
 }
 
 resource "aws_sns_topic_subscription" "sns_notify_slack" {
   topic_arn = aws_sns_topic.ecs_events.arn
   protocol  = "lambda"
-  endpoint  = module.slack_notifications.this_lambda_function_arn
+  endpoint  = module.slack_notifications.lambda_function_arn
 }
+

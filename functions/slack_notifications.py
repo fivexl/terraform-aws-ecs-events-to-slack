@@ -1,7 +1,6 @@
 import os
 import json
 import logging
-from datetime import datetime
 import http.client
 
 
@@ -48,21 +47,13 @@ def ecs_events_parser(detail_type, detail):
     if detail_type == 'ECS Deployment State Change':
         result = f'*Event Detail:*' + emoji_event_type.get(detail['eventType'], "") + emoji_event_name.get(detail['eventName'], "") + '\n' + \
                  '• ' + detail['eventType'] + ' - ' + detail['eventName'] + '\n' + \
-                 '• Updated At: ' + str(datetime.strptime(detail['updatedAt'], '%Y-%m-%dT%H:%M:%SZ')) + '\n' + \
                  '• Deployment: ' + detail['deploymentId'] + '\n' + \
                  '• Reason: ' + detail['reason']
         return result
 
     if detail_type == 'ECS Service Action':
-        try:
-            ecs_cluster = detail['clusterArn'].split(':')[5].split('/')[1]
-        except Exception:
-            logging.warning('Error parsing clusterArn: `{}`'.format(detail['clusterArn']))
-            ecs_cluster = detail['clusterArn']
         result = f'*Event Detail:*' + emoji_event_type.get(detail['eventType'], "") + emoji_event_name.get(detail['eventName'], "") + '\n' + \
-                 '• ' + detail['eventType'] + ' - ' + detail['eventName'] + '\n' + \
-                 '• Created At: ' + str(datetime.strptime(detail['createdAt'], '%Y-%m-%dT%H:%M:%S.%fZ')) + '\n' + \
-                 '• Cluster: ' + ecs_cluster
+                 '• ' + detail['eventType'] + ' - ' + detail['eventName']
         if 'capacityProviderArns' in detail:
             capacity_providers = ""
             for capacity_provider in detail['capacityProviderArns']:
@@ -76,11 +67,6 @@ def ecs_events_parser(detail_type, detail):
         return result
 
     if detail_type == 'ECS Task State Change':
-        try:
-            ecs_cluster = detail['clusterArn'].split(':')[5].split('/')[1]
-        except Exception:
-            logging.warning('Error parsing clusterArn: `{}`'.format(detail['clusterArn']))
-            ecs_cluster = detail['clusterArn']
         container_instance_id = "UNKNOWN"
         if 'containerInstanceArn' in detail:
             try:
@@ -98,20 +84,26 @@ def ecs_events_parser(detail_type, detail):
         except Exception:
             logging.warning('Error parsing taskArn: `{}`'.format(detail['taskArn']))
             task = detail['taskArn']
-        result = f'*Event Detail:*' + emoji_task_status.get(detail['lastStatus'], "") + ' -> ' + emoji_task_status.get(detail['desiredStatus'], "") + '\n' + \
-                 '• Last: ' + detail['lastStatus'] + ' Desired: ' + detail['desiredStatus'] + '\n' + \
+        result = f'*Event Detail:* ' + '\n' + \
                  '• Task Definition: ' + task_definition + '\n' + \
-                 '• Created At: ' + str(datetime.strptime(detail['createdAt'], '%Y-%m-%dT%H:%M:%S.%fZ')) + '\n' + \
-                 '• Task ID: ' + task + '\n' + \
-                 '• Instance ID: ' + container_instance_id + '\n' + \
-                 '• Cluster: ' + ecs_cluster
+                 '• Last: ' + detail['lastStatus'] + ' ' + emoji_task_status.get(detail['lastStatus'], "") + '\n' + \
+                 '• Desired: ' + detail['desiredStatus'] + ' ' + emoji_task_status.get(detail['desiredStatus'], "")
+        if container_instance_id != "UNKNOWN":
+            result = result + '\n' + '• Instance ID: ' + container_instance_id
         if detail['lastStatus'] == 'RUNNING':
             if 'healthStatus' in detail:
                 result = result + '\n' + '• HealthStatus: ' + detail['healthStatus']
         if detail['lastStatus'] == 'STOPPED':
             if 'stopCode' in detail:
+                # Skip Stop Codes for Task State Change
+                if detail['stopCode'] in os.environ.get('SKIP_TASK_STOP_CODES', '').split(','):
+                    return 'SKIP_EVENT'
                 result = result + '\n' + ':bangbang: Stop Code: ' + detail['stopCode']
             if 'stoppedReason' in detail:
+                # Skip Stopped Reasons for Task State Change
+                for skip_task_stopped_reason in os.environ.get('SKIP_TASK_STOPPED_REASONS', '').split(','):
+                    if detail['stoppedReason'].find(skip_task_stopped_reason) != -1:
+                        return 'SKIP_EVENT'
                 result = result + '\n' + ':bangbang: Stop Reason: ' + detail['stoppedReason']
         return result
 
@@ -123,11 +115,9 @@ def ecs_events_parser(detail_type, detail):
 def event_to_slack_message(message):
     event_id = message['id'] if 'id' in message else None
     detail_type = message['detail-type']
-    if detail_type in os.environ.get('SKIP_EVENT_TYPES', '').split(';'):
-        return 'SKIP_EVENT'
     source = message['source'] if 'source' in message else None
     account = message['account'] if 'account' in message else None
-    time = datetime.strptime(message['time'], '%Y-%m-%dT%H:%M:%SZ') if 'time' in message else None
+    time = message['time'] if 'time' in message else None
     region = message['region'] if 'region' in message else None
     resources = ""
     for resource in message['resources']:
@@ -140,6 +130,8 @@ def event_to_slack_message(message):
     known_detail = ""
     if source == 'aws.ecs':
         known_detail = ecs_events_parser(detail_type, detail)
+    if known_detail == 'SKIP_EVENT':
+        return known_detail
     blocks = list()
     contexts = list()
     title = f'*{detail_type}* - *{source}*'
