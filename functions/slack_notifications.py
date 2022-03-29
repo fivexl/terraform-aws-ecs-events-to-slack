@@ -4,6 +4,11 @@ import logging
 import http.client
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# HELPER FUNCTIONS
+# ---------------------------------------------------------------------------------------------------------------------
+
+
 def read_env_variable_or_die(env_var_name):
     value = os.environ.get(env_var_name, '')
     if value == '':
@@ -11,11 +16,14 @@ def read_env_variable_or_die(env_var_name):
         raise EnvironmentError(message)
     return value
 
+
 def is_sns_event(event):
     return event.get("Records") and event.get("Records")[0].get("Sns")
 
 # Input: EventBridge Message detail_type and detail
 # Output: mrkdwn text
+
+
 def ecs_events_parser(detail_type, detail):
     emoji_event_type = {
         'ERROR': ':exclamation:',
@@ -69,7 +77,8 @@ def ecs_events_parser(detail_type, detail):
                 logging.warning('Error parsing containerInstanceArn: `{}`'.format(detail['containerInstanceArn']))
                 container_instance_id = detail['containerInstanceArn']
         try:
-            task_definition = detail['taskDefinitionArn'].split(':')[5].split('/')[1] + ":" + detail['taskDefinitionArn'].split(':')[6]
+            task_definition = detail['taskDefinitionArn'].split(':')[5].split(
+                '/')[1] + ":" + detail['taskDefinitionArn'].split(':')[6]
         except Exception:
             logging.warning('Error parsing taskDefinitionArn: `{}`'.format(detail['taskDefinitionArn']))
             task_definition = detail['taskDefinitionArn']
@@ -197,6 +206,11 @@ def post_slack_message(hook_url, message):
     response = connection.getresponse()
     logging.info('Response: {}, message: {}'.format(response.status, response.read().decode()))
     return response.status
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# LAMBDA HANDLER
+# ---------------------------------------------------------------------------------------------------------------------
 
 
 def lambda_handler(event, context):
