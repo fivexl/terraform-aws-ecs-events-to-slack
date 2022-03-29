@@ -11,14 +11,8 @@ def read_env_variable_or_die(env_var_name):
         raise EnvironmentError(message)
     return value
 
-
-def sns_checker(event):
-    if 'Records' in event:
-        if 'Sns' in event['Records'][0]:
-            if 'Message' in event['Records'][0]['Sns']:
-                return True
-    return False
-
+def is_sns_event(event):
+    return event.get("Records") and event.get("Records")[0].get("Sns")
 
 # Input: EventBridge Message detail_type and detail
 # Output: mrkdwn text
@@ -209,7 +203,7 @@ def lambda_handler(event, context):
     if 'LOG_EVENTS' in os.environ and os.environ['LOG_EVENTS'] == 'True':
         logging.warning('Event logging enabled: `{}`'.format(json.dumps(event)))
     hook_url = read_env_variable_or_die('HOOK_URL')
-    if not sns_checker(event):
+    if not is_sns_event(event):
         raise Exception('Incoming Event is not SNS message')
     event_message = event['Records'][0]['Sns']['Message']
     try:
