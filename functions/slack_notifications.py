@@ -123,20 +123,20 @@ def ecs_events_parser(detail_type, detail):
 
 # Input: EventBridge Message
 # Output: Slack Message
-def event_to_slack_message(message):
-    event_id = message['id'] if 'id' in message else None
-    detail_type = message['detail-type']
-    account = message['account'] if 'account' in message else None
-    time = message['time'] if 'time' in message else None
-    region = message['region'] if 'region' in message else None
+def event_to_slack_message(event):
+    event_id = event['id'] if 'id' in event else None
+    detail_type = event['detail-type']
+    account = event['account'] if 'account' in event else None
+    time = event['time'] if 'time' in event else None
+    region = event['region'] if 'region' in event else None
     resources = ""
-    for resource in message['resources']:
+    for resource in event['resources']:
         try:
             resources = resources + ":dart: " + resource.split(':')[5] + "\n"
         except Exception:
             logging.warning('Error parsing resource: `{}`'.format(resource))
             resources = resources + ":dart: " + resource + "\n"
-    detail = message['detail'] if 'detail' in message else None
+    detail = event['detail'] if 'detail' in event else None
     known_detail = ecs_events_parser(detail_type, detail)
     if known_detail == 'SKIP_EVENT':
         return known_detail
