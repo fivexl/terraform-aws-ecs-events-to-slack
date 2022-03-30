@@ -3,6 +3,18 @@ import json
 import logging
 import http.client
 
+# ---------------------------------------------------------------------------------------------------------------------
+# ENVIRONMENTAL VARIABLES
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Boolean flag, which determins if the incoming even should be printed to the output.
+LOG_EVENTS = os.getenv('LOG_EVENTS', 'False').lower() in ('true', '1', 't')
+
+# The list of Stop Codes in Task State Change which should be skipped (ignored)
+SKIP_TASK_STOP_CODES = os.getenv('SKIP_TASK_STOP_CODES', '').split(',')
+
+# The list of Stop Reasons or substring in Task State Change which should be skipped (ignored).
+SKIP_TASK_STOPPED_REASONS = os.getenv('SKIP_TASK_STOPPED_REASONS', '').split(',')
 
 # ---------------------------------------------------------------------------------------------------------------------
 # HELPER FUNCTIONS
@@ -99,12 +111,12 @@ def ecs_events_parser(detail_type, detail):
         if detail['lastStatus'] == 'STOPPED':
             if 'stopCode' in detail:
                 # Skip Stop Codes for Task State Change
-                if detail['stopCode'] in os.environ.get('SKIP_TASK_STOP_CODES', '').split(','):
+                if detail['stopCode'] in SKIP_TASK_STOP_CODES:
                     return 'SKIP_EVENT'
                 result = result + '\n' + ':bangbang: Stop Code: ' + detail['stopCode']
             if 'stoppedReason' in detail:
                 # Skip Stopped Reasons for Task State Change
-                for skip_task_stopped_reason in os.environ.get('SKIP_TASK_STOPPED_REASONS', '').split(','):
+                for skip_task_stopped_reason in SKIP_TASK_STOPPED_REASONS:
                     if detail['stoppedReason'].find(skip_task_stopped_reason) != -1:
                         return 'SKIP_EVENT'
                 result = result + '\n' + ':bangbang: Stop Reason: ' + detail['stoppedReason']
@@ -214,7 +226,7 @@ def post_slack_message(hook_url, message):
 
 
 def lambda_handler(event, context):
-    if 'LOG_EVENTS' in os.environ and os.environ['LOG_EVENTS'] == 'True':
+    if LOG_EVENTS:
         logging.warning('Event logging enabled: `{}`'.format(json.dumps(event)))
     hook_url = read_env_variable_or_die('HOOK_URL')
     if not is_sns_event(event):
