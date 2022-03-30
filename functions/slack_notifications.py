@@ -28,10 +28,6 @@ def read_env_variable_or_die(env_var_name):
         raise EnvironmentError(message)
     return value
 
-
-def is_sns_event(event):
-    return event.get("Records") and event.get("Records")[0].get("Sns")
-
 # Input: EventBridge Message detail_type and detail
 # Output: mrkdwn text
 
@@ -130,7 +126,6 @@ def ecs_events_parser(detail_type, detail):
 def event_to_slack_message(message):
     event_id = message['id'] if 'id' in message else None
     detail_type = message['detail-type']
-    source = message['source'] if 'source' in message else None
     account = message['account'] if 'account' in message else None
     time = message['time'] if 'time' in message else None
     region = message['region'] if 'region' in message else None
@@ -142,14 +137,12 @@ def event_to_slack_message(message):
             logging.warning('Error parsing resource: `{}`'.format(resource))
             resources = resources + ":dart: " + resource + "\n"
     detail = message['detail'] if 'detail' in message else None
-    known_detail = ""
-    if source == 'aws.ecs':
-        known_detail = ecs_events_parser(detail_type, detail)
+    known_detail = ecs_events_parser(detail_type, detail)
     if known_detail == 'SKIP_EVENT':
         return known_detail
     blocks = list()
     contexts = list()
-    title = f'*{detail_type}* - *{source}*'
+    title = f'*{detail_type}*'
     blocks.append(
         {
             'type': 'section',
@@ -229,18 +222,15 @@ def lambda_handler(event, context):
     if LOG_EVENTS:
         logging.warning('Event logging enabled: `{}`'.format(json.dumps(event)))
     hook_url = read_env_variable_or_die('HOOK_URL')
-    if not is_sns_event(event):
-        raise Exception('Incoming Event is not SNS message')
-    event_message = event['Records'][0]['Sns']['Message']
-    try:
-        event_message_json = json.loads(event_message)
-    except json.JSONDecodeError as err:
-        logging.exception(f'JSON decode error: {err}')
-        raise Exception('JSON decode error')
-    slack_message = event_to_slack_message(event_message_json)
+
+    if event.get("source") != "aws.ecs":
+        raise Exception('The source of the incoming event is not "aws.ecs"')
+
+    slack_message = event_to_slack_message(event)
     if slack_message == 'SKIP_EVENT':
         logging.info('event skipped')
         return json.dumps({"code": 200, "info": "event_skipped"})
+
     response = post_slack_message(hook_url, slack_message)
     if response != 200:
         logging.error(
@@ -251,6 +241,6 @@ def lambda_handler(event, context):
 
 # For local testing
 if __name__ == '__main__':
-    with open('./test/sns_event.json') as f:
+    with open('./test/eventbridge_event.json') as f:
         test_event = json.load(f)
     lambda_handler(test_event, "default_context")
