@@ -109,8 +109,8 @@ module "slack_notifications" {
     }
   }
   environment_variables = {
-    HOOK_URL                  = var.slack_hook_url
-    LOG_EVENTS                = "True" # For enable please use - "True"
+    SLACK_WEBHOOK_URL = var.slack_webhook_url
+    LOG_EVENTS        = true
   }
   tags = var.tags
 }

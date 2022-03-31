@@ -10,17 +10,13 @@ import http.client
 # Boolean flag, which determins if the incoming even should be printed to the output.
 LOG_EVENTS = os.getenv('LOG_EVENTS', 'False').lower() in ('true', '1', 't')
 
+SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL', '')
+if SLACK_WEBHOOK_URL == '':
+    raise RuntimeError('The required env variable SLACK_WEBHOOK_URL is not set or empty!')
+
 # ---------------------------------------------------------------------------------------------------------------------
 # HELPER FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
-
-
-def read_env_variable_or_die(env_var_name):
-    value = os.environ.get(env_var_name, '')
-    if value == '':
-        message = f'Required env variable {env_var_name} is not defined or set to empty string'
-        raise EnvironmentError(message)
-    return value
 
 # Input: EventBridge Message detail_type and detail
 # Output: mrkdwn text
@@ -206,13 +202,12 @@ def post_slack_message(hook_url, message):
 def lambda_handler(event, context):
     if LOG_EVENTS:
         logging.warning('Event logging enabled: `{}`'.format(json.dumps(event)))
-    hook_url = read_env_variable_or_die('HOOK_URL')
 
     if event.get("source") != "aws.ecs":
         raise Exception('The source of the incoming event is not "aws.ecs"')
 
     slack_message = event_to_slack_message(event)
-    response = post_slack_message(hook_url, slack_message)
+    response = post_slack_message(SLACK_WEBHOOK_URL, slack_message)
     if response != 200:
         logging.error(
             "Error: received status `{}` using event `{}` and context `{}`".format(response, event,

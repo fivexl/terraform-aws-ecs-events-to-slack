@@ -9,7 +9,7 @@ variable "ecs_cluster_name" {
   type        = string
 }
 
-variable "slack_hook_url" {
+variable "slack_webhook_url" {
   description = "Slack incoming webhook URL"
   type        = string
 }
