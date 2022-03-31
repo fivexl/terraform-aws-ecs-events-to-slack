@@ -10,12 +10,6 @@ import http.client
 # Boolean flag, which determins if the incoming even should be printed to the output.
 LOG_EVENTS = os.getenv('LOG_EVENTS', 'False').lower() in ('true', '1', 't')
 
-# The list of Stop Codes in Task State Change which should be skipped (ignored)
-SKIP_TASK_STOP_CODES = os.getenv('SKIP_TASK_STOP_CODES', '').split(',')
-
-# The list of Stop Reasons or substring in Task State Change which should be skipped (ignored).
-SKIP_TASK_STOPPED_REASONS = os.getenv('SKIP_TASK_STOPPED_REASONS', '').split(',')
-
 # ---------------------------------------------------------------------------------------------------------------------
 # HELPER FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
@@ -106,15 +100,8 @@ def ecs_events_parser(detail_type, detail):
                 result = result + '\n' + '• HealthStatus: ' + detail['healthStatus']
         if detail['lastStatus'] == 'STOPPED':
             if 'stopCode' in detail:
-                # Skip Stop Codes for Task State Change
-                if detail['stopCode'] in SKIP_TASK_STOP_CODES:
-                    return 'SKIP_EVENT'
                 result = result + '\n' + ':bangbang: Stop Code: ' + detail['stopCode']
             if 'stoppedReason' in detail:
-                # Skip Stopped Reasons for Task State Change
-                for skip_task_stopped_reason in SKIP_TASK_STOPPED_REASONS:
-                    if detail['stoppedReason'].find(skip_task_stopped_reason) != -1:
-                        return 'SKIP_EVENT'
                 result = result + '\n' + ':bangbang: Stop Reason: ' + detail['stoppedReason']
         return result
 
@@ -138,8 +125,6 @@ def event_to_slack_message(event):
             resources = resources + ":dart: " + resource + "\n"
     detail = event['detail'] if 'detail' in event else None
     known_detail = ecs_events_parser(detail_type, detail)
-    if known_detail == 'SKIP_EVENT':
-        return known_detail
     blocks = list()
     contexts = list()
     title = f'*{detail_type}*'
@@ -227,10 +212,6 @@ def lambda_handler(event, context):
         raise Exception('The source of the incoming event is not "aws.ecs"')
 
     slack_message = event_to_slack_message(event)
-    if slack_message == 'SKIP_EVENT':
-        logging.info('event skipped')
-        return json.dumps({"code": 200, "info": "event_skipped"})
-
     response = post_slack_message(hook_url, slack_message)
     if response != 200:
         logging.error(

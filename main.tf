@@ -109,8 +109,6 @@ module "slack_notifications" {
     }
   }
   environment_variables = {
-    SKIP_TASK_STOP_CODES      = join(",", var.skip_task_stop_codes)
-    SKIP_TASK_STOPPED_REASONS = join(",", var.skip_task_stopped_reasons)
     HOOK_URL                  = var.slack_hook_url
     LOG_EVENTS                = "True" # For enable please use - "True"
   }
