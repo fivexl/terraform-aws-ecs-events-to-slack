@@ -204,7 +204,7 @@ def lambda_handler(event, context):
         logging.warning('Event logging enabled: `{}`'.format(json.dumps(event)))
 
     if event.get("source") != "aws.ecs":
-        raise Exception('The source of the incoming event is not "aws.ecs"')
+        raise ValueError('The source of the incoming event is not "aws.ecs"')
 
     slack_message = event_to_slack_message(event)
     response = post_slack_message(SLACK_WEBHOOK_URL, slack_message)

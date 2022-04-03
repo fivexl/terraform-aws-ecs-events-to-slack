@@ -1,68 +1,75 @@
+
+# "detail": {
+#   "clusterArn": [
+#     "${data.aws_ecs_cluster.this.arn}"
+#   ],
+#   "lastStatus": [
+#     "STOPPED"
+#   ]
+# }
 resource "aws_cloudwatch_event_rule" "ecs_task" {
-  name_prefix   = "ecs_task_${var.ecs_cluster_name}"
-  event_pattern = <<EOF
-{
-  "source": [
-    "aws.ecs"
-  ],
-  "detail-type": [
-    "ECS Task State Change"
-  ],
-  "detail": {
-    "clusterArn": [
-      "${data.aws_ecs_cluster.this.arn}"
-    ],
-    "lastStatus": [
-      "STOPPED"
-    ]
-  }
-}
-EOF
-  tags          = var.tags
+  name_prefix   = "ecs-task-state-change-to-slack"
+  event_pattern = <<-EOF
+    {
+      "source": [
+        "aws.ecs"
+      ],
+      "detail-type": [
+        "ECS Task State Change"
+      ],
+      "detail": ${jsonencode(var.ecs_task_state_event_rule_detail)}
+    }
+  EOF
+
+  tags = var.tags
 }
 
-resource "aws_cloudwatch_event_rule" "ecs_service" {
-  name_prefix   = "ecs_service_${var.ecs_cluster_name}"
-  event_pattern = <<EOF
-{
-  "source": [
-    "aws.ecs"
-  ],
-  "detail-type": [
-    "ECS Service Action"
-  ],
-  "detail": {
-    "clusterArn": [
-      "${data.aws_ecs_cluster.this.arn}"
-    ],
-    "eventType": [
-      "WARN",
-      "ERROR"
-    ]
-  }
-}
-EOF
-  tags          = var.tags
-}
-
+# "detail": {
+#   "eventType": [
+#     "ERROR"
+#   ]
+# }
 resource "aws_cloudwatch_event_rule" "ecs_deployment" {
   name_prefix   = "ecs_deployment_${var.ecs_cluster_name}"
-  event_pattern = <<EOF
-{
-  "source": [
-    "aws.ecs"
-  ],
-  "detail-type": [
-    "ECS Deployment State Change"
-  ],
-  "detail": {
-    "eventType": [
-      "ERROR"
-    ]
-  }
+  event_pattern = <<-EOF
+    {
+      "source": [
+        "aws.ecs"
+      ],
+      "detail-type": [
+        "ECS Deployment State Change"
+      ],
+      "detail": ${jsonencode(var.ecs_deployment_state_event_rule_detail)}
+    }
+  EOF
+
+  tags = var.tags
 }
-EOF
-  tags          = var.tags
+
+# "detail": {
+#   "clusterArn": [
+#     "${data.aws_ecs_cluster.this.arn}"
+#   ],
+#   "eventType": [
+#     "WARN",
+#     "ERROR"
+#   ]
+# }
+resource "aws_cloudwatch_event_rule" "ecs_service" {
+  name_prefix   = "ecs-service-action-to-slack"
+  event_pattern = <<-EOF
+    {
+      "source": [
+        "aws.ecs"
+      ],
+      "detail-type": [
+        "ECS Service Action"
+      ],
+      "detail": ${jsonencode(var.ecs_service_action_event_rule_detail)}
+    }
+  EOF
+
+  tags = var.tags
 }
 
 resource "aws_cloudwatch_event_target" "ecs_task" {
@@ -84,8 +91,9 @@ resource "aws_cloudwatch_event_target" "ecs_deployment" {
 }
 
 module "slack_notifications" {
-  source                            = "terraform-aws-modules/lambda/aws"
-  version                           = "2.5.0"
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "2.5.0"
+
   function_name                     = "ecs_slack_notifications_${var.ecs_cluster_name}"
   description                       = "Used to receive events from EventBridge and send them to Slack"
   handler                           = "slack_notifications.lambda_handler"
