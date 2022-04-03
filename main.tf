@@ -8,7 +8,7 @@
 #   ]
 # }
 resource "aws_cloudwatch_event_rule" "ecs_task" {
-  name_prefix   = "ecs-task-state-change-to-slack"
+  name_prefix   = "${var.name}-ecs-task-state"
   event_pattern = <<-EOF
     {
       "source": [
@@ -30,7 +30,7 @@ resource "aws_cloudwatch_event_rule" "ecs_task" {
 #   ]
 # }
 resource "aws_cloudwatch_event_rule" "ecs_deployment" {
-  name_prefix   = "ecs_deployment_${var.ecs_cluster_name}"
+  name_prefix   = "${var.name}-ecs-deployment-state"
   event_pattern = <<-EOF
     {
       "source": [
@@ -56,7 +56,7 @@ resource "aws_cloudwatch_event_rule" "ecs_deployment" {
 #   ]
 # }
 resource "aws_cloudwatch_event_rule" "ecs_service" {
-  name_prefix   = "ecs-service-action-to-slack"
+  name_prefix   = "${var.name}-ecs-service-action"
   event_pattern = <<-EOF
     {
       "source": [
@@ -73,28 +73,29 @@ resource "aws_cloudwatch_event_rule" "ecs_service" {
 }
 
 resource "aws_cloudwatch_event_target" "ecs_task" {
-  target_id = "ecs_task_${var.ecs_cluster_name}"
+  target_id = "${var.name}-ecs-task-state"
   arn       = module.slack_notifications.lambda_function_arn
   rule      = aws_cloudwatch_event_rule.ecs_task.name
 }
 
+resource "aws_cloudwatch_event_target" "ecs_deployment" {
+  target_id = "${var.name}-ecs-deployment-state"
+  arn       = module.slack_notifications.lambda_function_arn
+  rule      = aws_cloudwatch_event_rule.ecs_deployment.name
+}
+
 resource "aws_cloudwatch_event_target" "ecs_service" {
-  target_id = "ecs_service_${var.ecs_cluster_name}"
+  target_id = "${var.name}-ecs-service-action"
   arn       = module.slack_notifications.lambda_function_arn
   rule      = aws_cloudwatch_event_rule.ecs_service.name
 }
 
-resource "aws_cloudwatch_event_target" "ecs_deployment" {
-  target_id = "ecs_deployment_${var.ecs_cluster_name}"
-  arn       = module.slack_notifications.lambda_function_arn
-  rule      = aws_cloudwatch_event_rule.ecs_deployment.name
-}
 
 module "slack_notifications" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "2.5.0"
 
-  function_name                     = "ecs_slack_notifications_${var.ecs_cluster_name}"
+  function_name                     = var.name
   description                       = "Used to receive events from EventBridge and send them to Slack"
   handler                           = "slack_notifications.lambda_handler"
   source_path                       = "${path.module}/functions/slack_notifications.py"
@@ -107,13 +108,13 @@ module "slack_notifications" {
       principal  = "events.amazonaws.com"
       source_arn = aws_cloudwatch_event_rule.ecs_task.arn
     }
-    AllowExecutionFromECSServiceAction = {
-      principal  = "events.amazonaws.com"
-      source_arn = aws_cloudwatch_event_rule.ecs_service.arn
-    }
     AllowExecutionFromECSDeploymentStateChange = {
       principal  = "events.amazonaws.com"
       source_arn = aws_cloudwatch_event_rule.ecs_deployment.arn
+    }
+    AllowExecutionFromECSServiceAction = {
+      principal  = "events.amazonaws.com"
+      source_arn = aws_cloudwatch_event_rule.ecs_service.arn
     }
   }
   environment_variables = {
