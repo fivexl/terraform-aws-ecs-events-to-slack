@@ -93,10 +93,10 @@ resource "aws_cloudwatch_event_target" "ecs_service" {
 
 module "slack_notifications" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "2.5.0"
+  version = "3.1.0"
 
   function_name                     = var.name
-  description                       = "Used to receive events from EventBridge and send them to Slack"
+  description                       = "Receive events from EventBridge and send them to Slack"
   handler                           = "slack_notifications.lambda_handler"
   source_path                       = "${path.module}/functions/slack_notifications.py"
   runtime                           = "python3.9"
