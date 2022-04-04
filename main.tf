@@ -104,15 +104,15 @@ module "slack_notifications" {
   publish                           = true
   cloudwatch_logs_retention_in_days = 14
   allowed_triggers = {
-    AllowExecutionFromECSTaskStateChange = {
+    ECSTaskStateChange = {
       principal  = "events.amazonaws.com"
       source_arn = aws_cloudwatch_event_rule.ecs_task.arn
     }
-    AllowExecutionFromECSDeploymentStateChange = {
+    ECSDeploymentStateChange = {
       principal  = "events.amazonaws.com"
       source_arn = aws_cloudwatch_event_rule.ecs_deployment.arn
     }
-    AllowExecutionFromECSServiceAction = {
+    ECSServiceAction = {
       principal  = "events.amazonaws.com"
       source_arn = aws_cloudwatch_event_rule.ecs_service.arn
     }
