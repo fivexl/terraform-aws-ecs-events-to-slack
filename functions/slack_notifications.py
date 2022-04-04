@@ -111,19 +111,19 @@ def ecs_events_parser(detail_type, detail):
 # Input: EventBridge Message
 # Output: Slack Message
 def event_to_slack_message(event):
-    event_id = event['id'] if 'id' in event else None
-    detail_type = event['detail-type']
-    account = event['account'] if 'account' in event else None
-    time = event['time'] if 'time' in event else None
-    region = event['region'] if 'region' in event else None
-    resources = ""
+    event_id = event.get('id')
+    detail_type = event.get('detail-type')
+    account = event.get('account')
+    time = event.get('time')
+    region = event.get('region')
+    resources = []
     for resource in event['resources']:
         try:
-            resources = resources + ":dart: " + resource.split(':')[5] + "\n"
+            resources.append(":dart: " + resource.split(':')[5])
         except Exception:
-            log.error('Error parsing resource: `{}`'.format(resource))
-            resources = resources + ":dart: " + resource + "\n"
-    detail = event['detail'] if 'detail' in event else None
+            log.error('Error parsing the resource ARN: `{}`'.format(resource))
+            resources.append(":dart: " + resource)
+    detail = event.get('detail')
     known_detail = ecs_events_parser(detail_type, detail)
     blocks = list()
     contexts = list()
@@ -137,17 +137,17 @@ def event_to_slack_message(event):
             }
         }
     )
-    if resources != "":
+    if resources:
         blocks.append(
             {
                 'type': 'section',
                 'text': {
                     'type': 'mrkdwn',
-                    'text': "Involved resources \n" + resources
+                    'text': "*Resources*:\n" + '\n'.join(resources)
                 }
             }
         )
-    if detail is not None and known_detail == "":
+    if detail and not known_detail:
         blocks.append(
             {
                 'type': 'section',
@@ -157,7 +157,7 @@ def event_to_slack_message(event):
                 }
             }
         )
-    if known_detail != "":
+    if known_detail:
         blocks.append(
             {
                 'type': 'section',
