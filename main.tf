@@ -99,7 +99,7 @@ module "slack_notifications" {
   description                       = "Used to receive events from EventBridge and send them to Slack"
   handler                           = "slack_notifications.lambda_handler"
   source_path                       = "${path.module}/functions/slack_notifications.py"
-  runtime                           = "python3.8"
+  runtime                           = "python3.9"
   timeout                           = 30
   publish                           = true
   cloudwatch_logs_retention_in_days = 14
