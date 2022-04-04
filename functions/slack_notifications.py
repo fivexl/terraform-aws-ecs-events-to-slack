@@ -14,6 +14,10 @@ SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL', '')
 if SLACK_WEBHOOK_URL == '':
     raise RuntimeError('The required env variable SLACK_WEBHOOK_URL is not set or empty!')
 
+# Set the log level
+log = logging.getLogger()
+log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
+
 # ---------------------------------------------------------------------------------------------------------------------
 # HELPER FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
@@ -60,7 +64,7 @@ def ecs_events_parser(detail_type, detail):
                 try:
                     capacity_providers = capacity_providers + capacity_provider.split(':')[5].split('/')[1] + ", "
                 except Exception:
-                    logging.warning('Error parsing clusterArn: `{}`'.format(capacity_provider))
+                    log.error('Error parsing clusterArn: `{}`'.format(capacity_provider))
                     capacity_providers = capacity_providers + capacity_provider + ", "
             if capacity_providers != "":
                 result = result + '\n' + '• Capacity Providers: ' + capacity_providers
@@ -72,18 +76,18 @@ def ecs_events_parser(detail_type, detail):
             try:
                 container_instance_id = detail['containerInstanceArn'].split(':')[5].split('/')[2]
             except Exception:
-                logging.warning('Error parsing containerInstanceArn: `{}`'.format(detail['containerInstanceArn']))
+                log.error('Error parsing containerInstanceArn: `{}`'.format(detail['containerInstanceArn']))
                 container_instance_id = detail['containerInstanceArn']
         try:
             task_definition = detail['taskDefinitionArn'].split(':')[5].split(
                 '/')[1] + ":" + detail['taskDefinitionArn'].split(':')[6]
         except Exception:
-            logging.warning('Error parsing taskDefinitionArn: `{}`'.format(detail['taskDefinitionArn']))
+            log.error('Error parsing taskDefinitionArn: `{}`'.format(detail['taskDefinitionArn']))
             task_definition = detail['taskDefinitionArn']
         try:
             task = detail['taskArn'].split(':')[5].split('/')[2]
         except Exception:
-            logging.warning('Error parsing taskArn: `{}`'.format(detail['taskArn']))
+            log.error('Error parsing taskArn: `{}`'.format(detail['taskArn']))
             task = detail['taskArn']
         result = f'*Event Detail:* ' + '\n' + \
                  '• Task Definition: ' + task_definition + '\n' + \
@@ -117,7 +121,7 @@ def event_to_slack_message(event):
         try:
             resources = resources + ":dart: " + resource.split(':')[5] + "\n"
         except Exception:
-            logging.warning('Error parsing resource: `{}`'.format(resource))
+            log.error('Error parsing resource: `{}`'.format(resource))
             resources = resources + ":dart: " + resource + "\n"
     detail = event['detail'] if 'detail' in event else None
     known_detail = ecs_events_parser(detail_type, detail)
@@ -182,7 +186,7 @@ def event_to_slack_message(event):
 # Slack web hook example
 # https://hooks.slack.com/services/XXXXXXX/XXXXXXX/XXXXXXXXXX
 def post_slack_message(hook_url, message):
-    logging.info(f'Sending message: {json.dumps(message)}')
+    log.debug(f'Sending message: {json.dumps(message)}')
     headers = {'Content-type': 'application/json'}
     connection = http.client.HTTPSConnection('hooks.slack.com')
     connection.request('POST',
@@ -190,7 +194,7 @@ def post_slack_message(hook_url, message):
                        json.dumps(message),
                        headers)
     response = connection.getresponse()
-    logging.info('Response: {}, message: {}'.format(response.status, response.read().decode()))
+    log.debug('Response: {}, message: {}'.format(response.status, response.read().decode()))
     return response.status
 
 
@@ -201,7 +205,7 @@ def post_slack_message(hook_url, message):
 
 def lambda_handler(event, context):
     if LOG_EVENTS:
-        logging.warning('Event logging enabled: `{}`'.format(json.dumps(event)))
+        log.info('Event logging enabled: `{}`'.format(json.dumps(event)))
 
     if event.get("source") != "aws.ecs":
         raise ValueError('The source of the incoming event is not "aws.ecs"')
@@ -209,7 +213,7 @@ def lambda_handler(event, context):
     slack_message = event_to_slack_message(event)
     response = post_slack_message(SLACK_WEBHOOK_URL, slack_message)
     if response != 200:
-        logging.error(
+        log.error(
             "Error: received status `{}` using event `{}` and context `{}`".format(response, event,
                                                                                    context))
     return json.dumps({"code": response})

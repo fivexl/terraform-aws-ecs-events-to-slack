@@ -120,6 +120,7 @@ module "slack_notifications" {
   environment_variables = {
     SLACK_WEBHOOK_URL = var.slack_webhook_url
     LOG_EVENTS        = true
+    LOG_LEVEL         = "INFO"
   }
   tags = var.tags
 }
