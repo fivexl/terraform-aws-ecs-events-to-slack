@@ -48,6 +48,13 @@ def ecs_events_parser(detail_type, detail):
         'STOPPED': ':black_square_for_stop:'
     }
 
+    if detail_type == 'ECS Container Instance State Change':
+        result = f'*Instance ID:* ' + detail['ec2InstanceId'] + '\n' + \
+                 '• Status: ' + detail['status']
+        if 'statusReason' in detail:
+            result = result + '\n' + '• Reason: ' + detail['statusReason']
+        return result
+
     if detail_type == 'ECS Deployment State Change':
         result = f'*Event Detail:*' + emoji_event_type.get(detail['eventType'], "") + emoji_event_name.get(detail['eventName'], "") + '\n' + \
                  '• ' + detail['eventType'] + ' - ' + detail['eventName'] + '\n' + \
