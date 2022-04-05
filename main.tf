@@ -1,13 +1,27 @@
+locals {
+  create_ecs_task_state_event_rule       = length(var.ecs_task_state_event_rule_detail) > 0
+  create_ecs_deployment_state_event_rule = length(var.ecs_deployment_state_event_rule_detail) > 0
+  create_ecs_service_action_event_rule   = length(var.ecs_service_action_event_rule_detail) > 0
 
-# "detail": {
-#   "clusterArn": [
-#     "${data.aws_ecs_cluster.this.arn}"
-#   ],
-#   "lastStatus": [
-#     "STOPPED"
-#   ]
-# }
-resource "aws_cloudwatch_event_rule" "ecs_task" {
+  lambda_allowed_triggers = {
+    ECSTaskStateChange = local.create_ecs_task_state_event_rule ? {
+      principal  = "events.amazonaws.com"
+      source_arn = aws_cloudwatch_event_rule.ecs_task_state[0].arn
+    } : {}
+    ECSDeploymentStateChange = local.create_ecs_deployment_state_event_rule ? {
+      principal  = "events.amazonaws.com"
+      source_arn = aws_cloudwatch_event_rule.ecs_deployment_state[0].arn
+    } : {}
+    ECSServiceAction = local.create_ecs_service_action_event_rule ? {
+      principal  = "events.amazonaws.com"
+      source_arn = aws_cloudwatch_event_rule.ecs_service_action[0].arn
+    } : {}
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "ecs_task_state" {
+  count = local.create_ecs_task_state_event_rule ? 1 : 0
+
   name_prefix   = "${var.name}-ecs-task-state"
   event_pattern = <<-EOF
     {
@@ -24,12 +38,9 @@ resource "aws_cloudwatch_event_rule" "ecs_task" {
   tags = var.tags
 }
 
-# "detail": {
-#   "eventType": [
-#     "ERROR"
-#   ]
-# }
-resource "aws_cloudwatch_event_rule" "ecs_deployment" {
+resource "aws_cloudwatch_event_rule" "ecs_deployment_state" {
+  count = local.create_ecs_deployment_state_event_rule ? 1 : 0
+
   name_prefix   = "${var.name}-ecs-deployment-state"
   event_pattern = <<-EOF
     {
@@ -46,16 +57,9 @@ resource "aws_cloudwatch_event_rule" "ecs_deployment" {
   tags = var.tags
 }
 
-# "detail": {
-#   "clusterArn": [
-#     "${data.aws_ecs_cluster.this.arn}"
-#   ],
-#   "eventType": [
-#     "WARN",
-#     "ERROR"
-#   ]
-# }
-resource "aws_cloudwatch_event_rule" "ecs_service" {
+resource "aws_cloudwatch_event_rule" "ecs_service_action" {
+  count = local.create_ecs_service_action_event_rule ? 1 : 0
+
   name_prefix   = "${var.name}-ecs-service-action"
   event_pattern = <<-EOF
     {
@@ -72,22 +76,28 @@ resource "aws_cloudwatch_event_rule" "ecs_service" {
   tags = var.tags
 }
 
-resource "aws_cloudwatch_event_target" "ecs_task" {
+resource "aws_cloudwatch_event_target" "ecs_task_state" {
+  count = local.create_ecs_task_state_event_rule ? 1 : 0
+
   target_id = "${var.name}-ecs-task-state"
   arn       = module.slack_notifications.lambda_function_arn
-  rule      = aws_cloudwatch_event_rule.ecs_task.name
+  rule      = aws_cloudwatch_event_rule.ecs_task_state[0].name
 }
 
-resource "aws_cloudwatch_event_target" "ecs_deployment" {
+resource "aws_cloudwatch_event_target" "ecs_deployment_state" {
+  count = local.create_ecs_deployment_state_event_rule ? 1 : 0
+
   target_id = "${var.name}-ecs-deployment-state"
   arn       = module.slack_notifications.lambda_function_arn
-  rule      = aws_cloudwatch_event_rule.ecs_deployment.name
+  rule      = aws_cloudwatch_event_rule.ecs_deployment_state[0].name
 }
 
-resource "aws_cloudwatch_event_target" "ecs_service" {
+resource "aws_cloudwatch_event_target" "ecs_service_action" {
+  count = local.create_ecs_service_action_event_rule ? 1 : 0
+
   target_id = "${var.name}-ecs-service-action"
   arn       = module.slack_notifications.lambda_function_arn
-  rule      = aws_cloudwatch_event_rule.ecs_service.name
+  rule      = aws_cloudwatch_event_rule.ecs_service_action[0].name
 }
 
 
@@ -103,20 +113,7 @@ module "slack_notifications" {
   timeout                           = 30
   publish                           = true
   cloudwatch_logs_retention_in_days = 14
-  allowed_triggers = {
-    ECSTaskStateChange = {
-      principal  = "events.amazonaws.com"
-      source_arn = aws_cloudwatch_event_rule.ecs_task.arn
-    }
-    ECSDeploymentStateChange = {
-      principal  = "events.amazonaws.com"
-      source_arn = aws_cloudwatch_event_rule.ecs_deployment.arn
-    }
-    ECSServiceAction = {
-      principal  = "events.amazonaws.com"
-      source_arn = aws_cloudwatch_event_rule.ecs_service.arn
-    }
-  }
+  allowed_triggers                  = { for k, v in local.lambda_allowed_triggers : k => v if length(v) > 0 }
   environment_variables = {
     SLACK_WEBHOOK_URL = var.slack_webhook_url
     LOG_EVENTS        = true
