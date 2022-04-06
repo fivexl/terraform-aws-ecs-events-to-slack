@@ -8,7 +8,7 @@ import http.client
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Boolean flag, which determins if the incoming even should be printed to the output.
-LOG_EVENTS = os.getenv('LOG_EVENTS', 'False').lower() in ('true', '1', 't')
+LOG_EVENTS = os.getenv('LOG_EVENTS', 'False').lower() in ('true', '1', 't', 'yes', 'y')
 
 SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL', '')
 if SLACK_WEBHOOK_URL == '':
