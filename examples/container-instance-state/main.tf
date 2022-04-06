@@ -17,6 +17,7 @@ module "ecs_to_slack" {
   ecs_service_action_event_rule_detail   = {}
 
   # Create a custom rule, for all events from the cluster's Container Instances
+  # Find more infro here https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-patterns-content-based-filtering.html
   custom_event_rules = {
     ECSContInstanceStateChange = {
       detail-type = ["ECS Container Instance State Change"]

@@ -12,6 +12,7 @@ module "ecs_to_slack" {
   slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
 
   # Process events "ECS Task State Change"
+  # Find more infro here https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-patterns-content-based-filtering.html
   ecs_task_state_event_rule_detail = {
     clusterArn = [data.aws_ecs_cluster.this.arn],                  # Filter by this ECS cluster ARN,
     group      = ["service:EXAMPLE-SERVICE-NAME"]                  # and only from this ECS service,
