@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 autopep8 = "*"
 
-# We locked versions according to AWS SDK for Python 3.8:
+# We locked versions according to AWS SDK for Python 3.9:
 # https://docs.aws.amazon.com/lambda/latest/dg/lambda-python.html
 [packages]
 boto3 = "==1.20.32"
