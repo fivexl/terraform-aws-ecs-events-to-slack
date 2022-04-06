@@ -18,6 +18,12 @@ variable "slack_webhook_url" {
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
 
+variable "role_name" {
+  description = "The string which will be used for the name of Lambda IAM role"
+  type        = string
+  default     = null
+}
+
 variable "ecs_task_state_event_rule_detail" {
   description = "The content of the `detail` section in the EvenBridge Rule for `ECS Task State Change` events. Use it to filter the events which will be processed and sent to Slack. If set to an empty map, the event rule will not be created."
   type        = any

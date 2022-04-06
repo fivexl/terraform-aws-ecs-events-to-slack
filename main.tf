@@ -51,6 +51,7 @@ module "slack_notifications" {
   version = "2.36.0"
 
   function_name = var.name
+  role_name     = var.role_name
   description   = "Receive events from EventBridge and send them to Slack"
   handler       = "slack_notifications.lambda_handler"
   source_path   = "${path.module}/functions/slack_notifications.py"
