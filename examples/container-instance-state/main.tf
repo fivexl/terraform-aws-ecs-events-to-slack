@@ -6,9 +6,9 @@ data "aws_ecs_cluster" "this" {
   cluster_name = "EXAMPLE-CLUSTER-NAME"
 }
 
-module "ecs_to_slack_notifications" {
+module "ecs_to_slack" {
   source            = "../../"
-  name              = "ecs-to-eb"
+  name              = "ecs-to-slack"
   slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
 
   # Do not create any built-in rule

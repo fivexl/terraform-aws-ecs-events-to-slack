@@ -1,17 +1,15 @@
 # terraform-aws-ecs-events-to-slack
-Rules for Amazon EventBridge that fetch ECS events and send that events to Slack
+Rules for Amazon EventBridge that fetch ECS events and send them to Slack
 
 ## Example
 ```hcl
 module "ecs_to_slack" {
-  source                    = "./ecs_to_slack"
-  ecs_cluster_name          = var.ecs_cluster_name
-  slack_hook_url            = var.slack_hook_url
-  skip_task_stop_codes      = []
-  skip_task_stopped_reasons = ["deployment"]
-  tags                      = var.tags
+  source            = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
+  name              = "ecs-to-slack"
+  slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
 }
 ```
+Upi can find more examples in the [`examples/`](./examples/) directory
 
 ## Info
 - [Amazon ECS events](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_cwe_events.html)
