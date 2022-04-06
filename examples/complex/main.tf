@@ -40,3 +40,15 @@ module "ecs_to_slack" {
     }
   }
 }
+
+
+module "ecs_to_slack_no_jenkins" {
+  source            = "../../"
+  name              = "ecs-to-slack"
+  slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
+  
+  ecs_task_state_event_rule_detail = {
+    lastStatus = ["STOPPED"]
+    reason     = [{ "anything-but" = "Stopped by Jenkins Amazon ECS PlugIn" }]  # filter out jenkins ecs plugin events
+  }
+}
