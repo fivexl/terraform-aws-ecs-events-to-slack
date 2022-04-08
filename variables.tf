@@ -28,7 +28,8 @@ variable "ecs_task_state_event_rule_detail" {
   description = "The content of the `detail` section in the EvenBridge Rule for `ECS Task State Change` events. Use it to filter the events which will be processed and sent to Slack. If set to an empty map, the event rule will not be created."
   type        = any
   default = {
-    lastStatus = ["STOPPED"]
+    lastStatus    = ["STOPPED"]
+    stoppedReason = [{ "anything-but" : { "prefix" : "Scaling activity initiated by (deployment ecs-svc/" } }] # skip task stopped events triggerd by deployments
   }
 }
 
