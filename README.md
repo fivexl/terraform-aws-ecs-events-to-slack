@@ -11,7 +11,7 @@ module "ecs_to_slack" {
   slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
 }
 ```
-Upi can find more examples in the [`examples/`](./examples/) directory
+You can find more examples in the [`examples/`](./examples/) directory
 
 ## Info
 - [Amazon ECS events](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_cwe_events.html)
