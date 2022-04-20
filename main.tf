@@ -1,24 +1,24 @@
 locals {
   # Create a result map of all built-in event rules and given custom rules.
   event_rules = merge(
-    var.enable_ecs_task_state_event_rule ? {} : {
+    var.enable_ecs_task_state_event_rule ? {
       ECSTaskStateChange = {
         detail-type = ["ECS Task State Change"]
         detail      = var.ecs_task_state_event_rule_detail
       }
-    },
-    var.enable_ecs_deployment_state_event_rule ? {} : {
+    } : {},
+    var.enable_ecs_deployment_state_event_rule ? {
       ECSDeploymentStateChange = {
         detail-type = ["ECS Deployment State Change"]
         detail      = var.ecs_deployment_state_event_rule_detail
       }
-    },
-    var.enable_ecs_service_action_event_rule ? {} : {
+    } : {},
+    var.enable_ecs_service_action_event_rule ? {
       ECSServiceAction = {
         detail-type = ["ECS Service Action"]
         detail      = var.ecs_service_action_event_rule_detail
       }
-    },
+    } : {},
     var.custom_event_rules
   )
 }
