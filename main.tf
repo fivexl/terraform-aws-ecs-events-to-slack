@@ -1,21 +1,19 @@
 locals {
-  # Create a result map of all built-in event rules and give custom rules.
-  # If the `*_event_rule_detail` variable is set ot the empty map `{}` explicitly,
-  # then the corresponding event rule will not created.
+  # Create a result map of all built-in event rules and given custom rules.
   event_rules = merge(
-    length(var.ecs_task_state_event_rule_detail) == 0 ? {} : {
+    var.enable_ecs_task_state_event_rule ? {} : {
       ECSTaskStateChange = {
         detail-type = ["ECS Task State Change"]
         detail      = var.ecs_task_state_event_rule_detail
       }
     },
-    length(var.ecs_deployment_state_event_rule_detail) == 0 ? {} : {
+    var.enable_ecs_deployment_state_event_rule ? {} : {
       ECSDeploymentStateChange = {
         detail-type = ["ECS Deployment State Change"]
         detail      = var.ecs_deployment_state_event_rule_detail
       }
     },
-    length(var.ecs_service_action_event_rule_detail) == 0 ? {} : {
+    var.enable_ecs_service_action_event_rule ? {} : {
       ECSServiceAction = {
         detail-type = ["ECS Service Action"]
         detail      = var.ecs_service_action_event_rule_detail
