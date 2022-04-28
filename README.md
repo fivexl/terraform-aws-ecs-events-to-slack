@@ -21,7 +21,7 @@ You can find more examples in the [`examples/`](./examples/) directory
 ## AWS Terraform provier versions
 
 * version 0.1.2 is the last version that works with both Terraform AWS provider v3 and v4. There are no plans to update 0.1.X branch.
-* all versions later (2.0.0 and above) require Terraform AWS provider v4 as a baseline
+* all versions later (0.2.0 and above) require Terraform AWS provider v4 as a baseline
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
