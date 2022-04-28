@@ -18,6 +18,10 @@ You can find more examples in the [`examples/`](./examples/) directory
 - [Handling events with Lambda](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_cwet_handling.html)
 - [EventBridge Patterns](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-patterns.html)
 
+## AWS Terraform provier versions
+
+* version 0.1.2 is the last version that works with both Terraform AWS provider v3 and v4. There are no plans to update 0.1.X branch.
+* all versions later (2.0.0 and above) require Terraform AWS provider v4 as a baseline
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
@@ -40,7 +44,7 @@ You can find more examples in the [`examples/`](./examples/) directory
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_slack_notifications"></a> [slack\_notifications](#module\_slack\_notifications) | terraform-aws-modules/lambda/aws | 2.36.0 |
+| <a name="module_slack_notifications"></a> [slack\_notifications](#module\_slack\_notifications) | terraform-aws-modules/lambda/aws | 3.2.0 |
 
 ## Resources
 
