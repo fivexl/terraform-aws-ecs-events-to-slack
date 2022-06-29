@@ -15,6 +15,7 @@ if SLACK_WEBHOOK_URL == '':
     raise RuntimeError('The required env variable SLACK_WEBHOOK_URL is not set or empty!')
 
 # Set the log level
+logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
@@ -197,7 +198,7 @@ def event_to_slack_message(event):
 # Slack web hook example
 # https://hooks.slack.com/services/XXXXXXX/XXXXXXX/XXXXXXXXXX
 def post_slack_message(hook_url, message):
-    log.debug(f'Sending message: {json.dumps(message)}')
+    log.debug(f'Sending message: {json.dumps(message, indent=4)}')
     headers = {'Content-type': 'application/json'}
     connection = http.client.HTTPSConnection('hooks.slack.com')
     connection.request('POST',
