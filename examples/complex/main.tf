@@ -30,7 +30,7 @@ module "ecs_to_slack" {
   }
 
   custom_event_rules = {
-    # Custom rule for all started tasks of a certain service
+    # Custom rule which triggers on all started tasks of a certain service
     ECSTaskStateChange_Started = {
       detail-type = ["ECS Task State Change"]
       detail = {
@@ -40,7 +40,7 @@ module "ecs_to_slack" {
       }
     }
 
-    # Custom rule for all stopped tasks with container's non-zero exit code
+    # Custom rule which triggers on all stopped tasks with non-zero exit code of the essential container
     ECSTaskStateChange_StoppedNonZero = {
       detail-type = ["ECS Task State Change"]
       detail = {
