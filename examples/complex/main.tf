@@ -29,14 +29,27 @@ module "ecs_to_slack" {
     eventName  = [{ "anything-but" = "SERVICE_TASK_START_IMPAIRED" }] # and only with this eventName
   }
 
-  # Add a fully custom rule, for all started tasks of a certain service
   custom_event_rules = {
+    # Custom rule for all started tasks of a certain service
     ECSTaskStateChange_Started = {
       detail-type = ["ECS Task State Change"]
       detail = {
         clusterArn = [data.aws_ecs_cluster.this.arn],
         lastStatus = ["STARTED"]
         group      = ["service:EXAMPLE-SERVICE-NAME"]
+      }
+    }
+
+    # Custom rule for all stopped tasks with container's non-zero exit code
+    ECSTaskStateChange_StoppedNonZero = {
+      detail-type = ["ECS Task State Change"]
+      detail = {
+        clusterArn = [data.aws_ecs_cluster.this.arn],
+        lastStatus = ["STOPPED"]
+        stopCode   = "EssentialContainerExited"
+        containers = {
+          exitCode = [{ "anything-but" = 0 }]
+        }
       }
     }
   }
