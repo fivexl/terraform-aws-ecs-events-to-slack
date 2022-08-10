@@ -69,11 +69,13 @@ variable "ecs_service_action_event_rule_detail" {
 
 variable "custom_event_rules" {
   description = "A map of objects representing the custom EventBridge rule which will be created in addition to the default rules."
-  type = map(object({
-    detail-type = any
-    detail      = any
-  }))
-  default = {}
+  type        = any
+  default     = {}
+
+  validation {
+    error_message = "Each rule object should have both 'detail' and 'detail-type' keys."
+    condition     = alltrue([for name, rule in var.custom_event_rules : length(setintersection(keys(rule), ["detail", "detail-type"])) == 2])
+  }
 }
 
 variable "tags" {
