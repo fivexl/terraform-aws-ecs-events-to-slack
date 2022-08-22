@@ -114,7 +114,7 @@ def ecs_events_parser(detail_type, detail):
             if 'containers' in detail:
                 result = result + '\n' + 'Task containers and their exit code:'
                 for container in detail['containers']:
-                    result = result + '\n' + ' - ' + container['name'] + ': ' + str(container['exitCode'])
+                    result = result + '\n' + ' - ' + container['name'] + ': ' + str(container.get('exitCode', 'unknown'))
         return result
 
     return f'*Event Detail:* ```{json.dumps(detail, indent=4)}```'
