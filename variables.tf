@@ -83,3 +83,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "recreate_missing_package" {
+  description = "Whether to recreate missing Lambda package if it is missing locally or not."
+  type        = bool
+  default     = true
+}
