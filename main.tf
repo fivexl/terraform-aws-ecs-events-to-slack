@@ -57,6 +57,8 @@ module "slack_notifications" {
   timeout       = 30
   publish       = true
 
+  recreate_missing_package = var.recreate_missing_package
+
   allowed_triggers = {
     for rule, params in local.event_rules : rule => {
       principal    = "events.amazonaws.com"
