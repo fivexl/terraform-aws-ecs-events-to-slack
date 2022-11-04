@@ -73,7 +73,7 @@ module "slack_notifications" {
     LOG_LEVEL         = "INFO"
   }
 
-  cloudwatch_logs_retention_in_days = 14
+  cloudwatch_logs_retention_in_days = var.cloudwatch_logs_retention_in_days
 
   tags = var.tags
 }
