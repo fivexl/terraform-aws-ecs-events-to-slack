@@ -136,7 +136,12 @@ def event_to_slack_message(event):
             log.error('Error parsing the resource ARN: `{}`'.format(resource))
             resources.append(":dart: " + resource)
     detail = event.get('detail')
-    known_detail = ecs_events_parser(detail_type, detail)
+
+    if event.get("source") == "aws.ecs":
+        known_detail = ecs_events_parser(detail_type, detail)
+    else:
+        known_detail = None
+
     blocks = list()
     contexts = list()
     title = f'*{detail_type}*'
@@ -218,9 +223,6 @@ def post_slack_message(hook_url, message):
 def lambda_handler(event, context):
     if LOG_EVENTS:
         log.info('Event logging enabled: `{}`'.format(json.dumps(event)))
-
-    if event.get("source") != "aws.ecs":
-        raise ValueError('The source of the incoming event is not "aws.ecs"')
 
     slack_message = event_to_slack_message(event)
     response = post_slack_message(SLACK_WEBHOOK_URL, slack_message)
