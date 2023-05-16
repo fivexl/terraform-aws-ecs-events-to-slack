@@ -46,7 +46,7 @@ resource "aws_cloudwatch_event_target" "this" {
 
 module "slack_notifications" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "3.2.0"
+  version = "4.17.1"
 
   function_name = var.name
   role_name     = var.role_name
