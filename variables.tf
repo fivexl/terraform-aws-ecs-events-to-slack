@@ -95,3 +95,9 @@ variable "cloudwatch_logs_retention_in_days" {
   type        = number
   default     = 14
 }
+
+variable "lambda_memory_size" {
+  description = "Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 10,240 MB (10 GB), in 64 MB increments."
+  type        = number
+  default     = 256
+}

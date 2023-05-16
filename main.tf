@@ -57,6 +57,8 @@ module "slack_notifications" {
   timeout       = 30
   publish       = true
 
+  memory_size = var.lambda_memory_size
+
   recreate_missing_package = var.recreate_missing_package
 
   allowed_triggers = {
