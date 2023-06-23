@@ -87,7 +87,7 @@ variable "tags" {
 variable "recreate_missing_package" {
   description = "Whether to recreate missing Lambda package if it is missing locally or not."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "cloudwatch_logs_retention_in_days" {
