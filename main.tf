@@ -46,14 +46,14 @@ resource "aws_cloudwatch_event_target" "this" {
 
 module "slack_notifications" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "4.17.1"
+  version = "5.0.0"
 
   function_name = var.name
   role_name     = var.role_name
   description   = "Receive events from EventBridge and send them to Slack"
   handler       = "slack_notifications.lambda_handler"
   source_path   = "${path.module}/functions/slack_notifications.py"
-  runtime       = "python3.9"
+  runtime       = "python3.10"
   timeout       = 30
   publish       = true
 
