@@ -23,6 +23,10 @@ locals {
   )
 }
 
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_cloudwatch_event_rule" "this" {
   for_each = local.event_rules
 
@@ -70,12 +74,31 @@ module "slack_notifications" {
   }
 
   environment_variables = {
-    SLACK_WEBHOOK_URL = var.slack_webhook_url
-    LOG_EVENTS        = true
-    LOG_LEVEL         = "INFO"
+    SLACK_WEBHOOK_URL                       = var.slack_webhook_url
+    LOG_EVENTS                              = true
+    LOG_LEVEL                               = "INFO"
+    SLACK_WEBHOOK_URL_SECRETSMANAGER_LOOKUP = var.slack_webhook_url_secretsmanager_lookup
   }
 
   cloudwatch_logs_retention_in_days = var.cloudwatch_logs_retention_in_days
+
+  attach_policy_json = var.slack_webhook_url_secretsmanager_lookup
+  policy_json = var.slack_webhook_url_secretsmanager_lookup ? jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "secretsmanager:GetSecretValue",
+          ],
+          "Resource" : [
+            "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url}*",
+          ]
+        }
+      ]
+    }
+  ) : null
 
   tags = var.tags
 }
