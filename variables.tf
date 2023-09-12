@@ -9,7 +9,7 @@ variable "name" {
 }
 
 variable "slack_webhook_url" {
-  description = "Slack incoming webhook URL"
+  description = "Slack incoming webhook URL. If slack_webhook_url_secretsmanager_lookup is true then this must match your secretsmanager secret name."
   type        = string
 }
 
@@ -22,6 +22,12 @@ variable "role_name" {
   description = "The string which will be used for the name of Lambda IAM role"
   type        = string
   default     = null
+}
+
+variable "slack_webhook_url_secretsmanager_lookup" {
+  description = "Lookup the slack incoming webhook URL stored in AWS secrets manager. slack_webhook_url must match your secretsmanager secret name."
+  type        = bool
+  default     = false
 }
 
 variable "enable_ecs_task_state_event_rule" {

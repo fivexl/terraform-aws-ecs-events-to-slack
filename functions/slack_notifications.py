@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import http.client
+import boto3
 
 # ---------------------------------------------------------------------------------------------------------------------
 # ENVIRONMENTAL VARIABLES
@@ -9,6 +10,8 @@ import http.client
 
 # Boolean flag, which determins if the incoming even should be printed to the output.
 LOG_EVENTS = os.getenv('LOG_EVENTS', 'False').lower() in ('true', '1', 't', 'yes', 'y')
+
+SLACK_WEBHOOK_URL_SECRETSMANAGER_LOOKUP = os.getenv('SLACK_WEBHOOK_URL_SECRETSMANAGER_LOOKUP', 'False').lower() in ('true', '1', 't', 'yes', 'y')
 
 SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL', '')
 if SLACK_WEBHOOK_URL == '':
@@ -18,6 +21,15 @@ if SLACK_WEBHOOK_URL == '':
 logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
+
+if SLACK_WEBHOOK_URL_SECRETSMANAGER_LOOKUP:
+    secretsmanager = boto3.client('secretsmanager')
+
+    secretsmanagerResponse = secretsmanager.get_secret_value(
+        SecretId = SLACK_WEBHOOK_URL,
+    )
+    
+    SLACK_WEBHOOK_URL = secretsmanagerResponse['SecretString']
 
 # ---------------------------------------------------------------------------------------------------------------------
 # HELPER FUNCTIONS
