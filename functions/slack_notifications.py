@@ -11,7 +11,7 @@ import boto3
 # Boolean flag, which determins if the incoming even should be printed to the output.
 LOG_EVENTS = os.getenv('LOG_EVENTS', 'False').lower() in ('true', '1', 't', 'yes', 'y')
 
-SLACK_WEBHOOK_URL_SECRETSMANAGER_LOOKUP = os.getenv('SLACK_WEBHOOK_URL_SECRETSMANAGER_LOOKUP', 'False').lower() in ('true', '1', 't', 'yes', 'y')
+SLACK_WEBHOOK_URL_SOURCE_TYPE = os.getenv('SLACK_WEBHOOK_URL_SOURCE_TYPE', 'text').lower()
 
 SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL', '')
 if SLACK_WEBHOOK_URL == '':
@@ -22,7 +22,7 @@ logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
-if SLACK_WEBHOOK_URL_SECRETSMANAGER_LOOKUP:
+if SLACK_WEBHOOK_URL_SOURCE_TYPE == 'secretsmanager':
     secretsmanager = boto3.client('secretsmanager')
 
     secretsmanagerResponse = secretsmanager.get_secret_value(

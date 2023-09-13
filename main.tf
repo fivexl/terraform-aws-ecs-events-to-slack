@@ -74,16 +74,16 @@ module "slack_notifications" {
   }
 
   environment_variables = {
-    SLACK_WEBHOOK_URL                       = var.slack_webhook_url
-    LOG_EVENTS                              = true
-    LOG_LEVEL                               = "INFO"
-    SLACK_WEBHOOK_URL_SECRETSMANAGER_LOOKUP = var.slack_webhook_url_secretsmanager_lookup
+    SLACK_WEBHOOK_URL             = var.slack_webhook_url_source
+    LOG_EVENTS                    = true
+    LOG_LEVEL                     = "INFO"
+    SLACK_WEBHOOK_URL_SOURCE_TYPE = var.slack_webhook_url_source_type
   }
 
   cloudwatch_logs_retention_in_days = var.cloudwatch_logs_retention_in_days
 
-  attach_policy_json = var.slack_webhook_url_secretsmanager_lookup
-  policy_json = var.slack_webhook_url_secretsmanager_lookup ? jsonencode(
+  attach_policy_json = (var.slack_webhook_url_source_type != "text")
+  policy_json = var.slack_webhook_url_source_type == "secretsmanager" ? jsonencode(
     {
       "Version" : "2012-10-17",
       "Statement" : [
@@ -93,7 +93,7 @@ module "slack_notifications" {
             "secretsmanager:GetSecretValue",
           ],
           "Resource" : [
-            "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url}*",
+            "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url_source}*",
           ]
         }
       ]
