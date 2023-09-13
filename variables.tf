@@ -8,8 +8,8 @@ variable "name" {
   type        = string
 }
 
-variable "slack_webhook_url" {
-  description = "Slack incoming webhook URL. If slack_webhook_url_secretsmanager_lookup is true then this must match your secretsmanager secret name."
+variable "slack_webhook_url_source" {
+  description = "(default) Slack incoming webhook URL. (if slack_webhook_url_source_type is 'secret') A secretsmanager secret name."
   type        = string
 }
 
@@ -24,10 +24,14 @@ variable "role_name" {
   default     = null
 }
 
-variable "slack_webhook_url_secretsmanager_lookup" {
-  description = "Lookup the slack incoming webhook URL stored in AWS secrets manager. slack_webhook_url must match your secretsmanager secret name."
-  type        = bool
-  default     = false
+variable "slack_webhook_url_source_type" {
+  description = "Define where to get the slack webhook URL for variable slack_webhook_url_source. Either as text input or from an AWS secretsmanager lookup"
+  validation {
+    condition     = contains(["text", "secretsmanager"], var.slack_webhook_url_source_type)
+    error_message = "Invalid source type. Must be one of 'text', 'secretsmanager'"
+  }
+  type    = string
+  default = "text"
 }
 
 variable "enable_ecs_task_state_event_rule" {
