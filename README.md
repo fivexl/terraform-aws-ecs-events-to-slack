@@ -8,7 +8,7 @@ Rules for Amazon EventBridge that fetch ECS events and send them to Slack
 module "ecs_to_slack" {
   source            = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
   name              = "ecs-to-slack"
-  slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
+  slack_webhook_url_source = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
 }
 ```
 You can find more examples in the [`examples/`](./examples/) directory

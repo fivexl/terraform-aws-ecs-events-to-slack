@@ -9,7 +9,7 @@ data "aws_ecs_cluster" "this" {
 module "ecs_to_slack" {
   source            = "../../"
   name              = "ecs-to-slack"
-  slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
+  slack_webhook_url_source = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
 
   # Process events "ECS Task State Change"
   # Find more infro here https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-patterns-content-based-filtering.html
@@ -59,7 +59,7 @@ module "ecs_to_slack" {
 module "ecs_to_slack_no_jenkins" {
   source            = "../../"
   name              = "ecs-to-slack"
-  slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
+  slack_webhook_url_source = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
 
   ecs_task_state_event_rule_detail = {
     lastStatus    = ["STOPPED"]
