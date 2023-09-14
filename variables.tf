@@ -9,7 +9,7 @@ variable "name" {
 }
 
 variable "slack_webhook_url" {
-  description = "Slack incoming webhook URL"
+  description = "(default) A Slack incoming webhook URL. (if slack_webhook_url_source_type is 'secret') A secretsmanager secret name."
   type        = string
 }
 
@@ -22,6 +22,16 @@ variable "role_name" {
   description = "The string which will be used for the name of Lambda IAM role"
   type        = string
   default     = null
+}
+
+variable "slack_webhook_url_source_type" {
+  description = "Define where to get the slack webhook URL for variable slack_webhook_url. Either as text input or from an AWS secretsmanager lookup"
+  validation {
+    condition     = contains(["text", "secretsmanager"], var.slack_webhook_url_source_type)
+    error_message = "Invalid source type. Must be one of 'text', 'secretsmanager'"
+  }
+  type    = string
+  default = "text"
 }
 
 variable "enable_ecs_task_state_event_rule" {
