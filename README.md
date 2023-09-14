@@ -8,7 +8,7 @@ Rules for Amazon EventBridge that fetch ECS events and send them to Slack
 module "ecs_to_slack" {
   source            = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
   name              = "ecs-to-slack"
-  slack_webhook_url_source = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
+  slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
 }
 ```
 You can find more examples in the [`examples/`](./examples/) directory
@@ -68,8 +68,8 @@ You can find more examples in the [`examples/`](./examples/) directory
 | <a name="input_name"></a> [name](#input\_name) | The string which will be used for the name of AWS Lambda function and other creaated resources | `string` | n/a | yes |
 | <a name="input_recreate_missing_package"></a> [recreate\_missing\_package](#input\_recreate\_missing\_package) | Whether to recreate missing Lambda package if it is missing locally or not. | `bool` | `true` | no |
 | <a name="input_role_name"></a> [role\_name](#input\_role\_name) | The string which will be used for the name of Lambda IAM role | `string` | `null` | no |
-| <a name="input_slack_webhook_url_source"></a> [slack\_webhook\_url\_source](#input\_slack\_webhook\_url\_source) | (default) Slack incoming webhook URL. (if slack\_webhook\_url\_source\_type is 'secret') A secretsmanager secret name. | `string` | n/a | yes |
-| <a name="input_slack_webhook_url_source_type"></a> [slack\_webhook\_url\_source\_type](#input\_slack\_webhook\_url\_source\_type) | Define where to get the slack webhook URL for variable slack\_webhook\_url\_source. Either as text input or from an AWS secretsmanager lookup | `string` | `"text"` | no |
+| <a name="input_slack_webhook_url"></a> [slack\_webhook\_url](#input\_slack\_webhook\_url) | (default) A Slack incoming webhook URL. (if slack\_webhook\_url\_source\_type is 'secret') A secretsmanager secret name. | `string` | n/a | yes |
+| <a name="input_slack_webhook_url_source_type"></a> [slack\_webhook\_url\_source\_type](#input\_slack\_webhook\_url\_source\_type) | Define where to get the slack webhook URL for variable slack\_webhook\_url. Either as text input or from an AWS secretsmanager lookup | `string` | `"text"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | `{}` | no |
 
 ## Outputs

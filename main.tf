@@ -74,7 +74,7 @@ module "slack_notifications" {
   }
 
   environment_variables = {
-    SLACK_WEBHOOK_URL             = var.slack_webhook_url_source
+    SLACK_WEBHOOK_URL             = var.slack_webhook_url
     LOG_EVENTS                    = true
     LOG_LEVEL                     = "INFO"
     SLACK_WEBHOOK_URL_SOURCE_TYPE = var.slack_webhook_url_source_type
@@ -93,7 +93,7 @@ module "slack_notifications" {
             "secretsmanager:GetSecretValue",
           ],
           "Resource" : [
-            "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url_source}*",
+            "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url}*",
           ]
         }
       ]

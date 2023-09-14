@@ -9,7 +9,7 @@ data "aws_ecs_cluster" "this" {
 module "ecs_to_slack" {
   source            = "../../"
   name              = "ecs-to-slack"
-  slack_webhook_url_source = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
+  slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
 
   # Do not create any built-in rule
   ecs_task_state_event_rule_detail       = {}

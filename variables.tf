@@ -8,8 +8,8 @@ variable "name" {
   type        = string
 }
 
-variable "slack_webhook_url_source" {
-  description = "(default) Slack incoming webhook URL. (if slack_webhook_url_source_type is 'secret') A secretsmanager secret name."
+variable "slack_webhook_url" {
+  description = "(default) A Slack incoming webhook URL. (if slack_webhook_url_source_type is 'secret') A secretsmanager secret name."
   type        = string
 }
 
@@ -25,7 +25,7 @@ variable "role_name" {
 }
 
 variable "slack_webhook_url_source_type" {
-  description = "Define where to get the slack webhook URL for variable slack_webhook_url_source. Either as text input or from an AWS secretsmanager lookup"
+  description = "Define where to get the slack webhook URL for variable slack_webhook_url. Either as text input or from an AWS secretsmanager lookup"
   validation {
     condition     = contains(["text", "secretsmanager"], var.slack_webhook_url_source_type)
     error_message = "Invalid source type. Must be one of 'text', 'secretsmanager'"

@@ -7,7 +7,7 @@ module "ecs_to_slack" {
   name              = "ecs-to-slack"
   
   # Use the secretsmanager secret name instead or the plaintext hook url. This must exist prior to apply!
-  slack_webhook_url_source = "/org/dev/slack_webhook_url_source"
+  slack_webhook_url = "/org/dev/slack_webhook_url"
   # Required to allow secretsmanager lookups.
   slack_webhook_url_source_type = true
 
