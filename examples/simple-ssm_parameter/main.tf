@@ -11,7 +11,7 @@ module "ecs_to_slack" {
 
 
   # Required to allow ssm lookups.
-  slack_webhook_url_source_type = "ssm" 
+  slack_webhook_url_source_type = "ssm"
 
   # We do not override any built-in event rules, so the default values will be used
 }
