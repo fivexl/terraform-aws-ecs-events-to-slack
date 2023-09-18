@@ -4,14 +4,19 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 variable "name" {
-  description = "The string which will be used for the name of AWS Lambda function and other creaated resources"
+  description = "The string which will be used for the name of AWS Lambda function and other created resources"
   type        = string
 }
 
 variable "slack_webhook_url" {
-  description = "(default) A Slack incoming webhook URL. (if slack_webhook_url_source_type is 'secret') A secretsmanager secret name."
+  description = <<EOT
+  (default) A Slack incoming webhook URL. 
+  (if slack_webhook_url_source_type is 'secret') A secretsmanager secret name 
+  (if slack_webhook_url_source_type is 'ssm') The full path to the SSM parameter including the initial slash.
+  EOT
   type        = string
 }
+
 
 # ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
