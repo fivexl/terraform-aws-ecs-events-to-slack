@@ -27,9 +27,11 @@ def get_slack_credentials(value: str, source_type: str) -> str:
         )
     try:
         if source_type == "text":
+            log.info("Getting slack credentials as plain text")
             return value
 
         elif source_type == "secretsmanager":
+            log.info("Getting slack credentials from secretsmanager")
             secretsmanager = boto3.client("secretsmanager")
             secretsmanagerResponse = secretsmanager.get_secret_value(
                 SecretId=value,
@@ -37,6 +39,7 @@ def get_slack_credentials(value: str, source_type: str) -> str:
             return secretsmanagerResponse["SecretString"]
 
         elif source_type == "ssm":
+            log.info("Getting slack credentials from ssm")
             ssm = boto3.client("ssm")
             ssmResponse = ssm.get_parameter(
                 Name=value,
