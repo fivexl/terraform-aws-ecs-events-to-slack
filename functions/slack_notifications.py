@@ -5,36 +5,63 @@ import os
 
 import boto3
 
-# --------------------------------------------------------------------------------------
-# ENVIRONMENTAL VARIABLES
-# --------------------------------------------------------------------------------------
-
 # Boolean flag, which determins if the incoming even should be printed to the output.
 LOG_EVENTS = os.getenv("LOG_EVENTS", "False").lower() in ("true", "1", "t", "yes", "y")
-
-SLACK_WEBHOOK_URL_SOURCE_TYPE = os.getenv(
-    "SLACK_WEBHOOK_URL_SOURCE_TYPE", "text"
-).lower()
-
-SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "")
-if SLACK_WEBHOOK_URL == "":
-    raise RuntimeError(
-        "The required env variable SLACK_WEBHOOK_URL is not set or empty!"
-    )
 
 # Set the log level
 logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
-if SLACK_WEBHOOK_URL_SOURCE_TYPE == "secretsmanager":
-    secretsmanager = boto3.client("secretsmanager")
 
-    secretsmanagerResponse = secretsmanager.get_secret_value(
-        SecretId=SLACK_WEBHOOK_URL,
+SLACK_WEBHOOK_URL_SOURCE_TYPE = os.getenv(
+    "SLACK_WEBHOOK_URL_SOURCE_TYPE", "text"
+).lower()
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "")
+
+
+def get_slack_credentials(value: str, source_type: str) -> str:
+    if not value:
+        raise RuntimeError(
+            "The required env variable SLACK_WEBHOOK_URL is not set or empty!"
+        )
+    try:
+        if source_type == "text":
+            return value
+
+        elif source_type == "secretsmanager":
+            secretsmanager = boto3.client("secretsmanager")
+            secretsmanagerResponse = secretsmanager.get_secret_value(
+                SecretId=value,
+            )
+            return secretsmanagerResponse["SecretString"]
+
+        elif source_type == "ssm":
+            ssm = boto3.client("ssm")
+            ssmResponse = ssm.get_parameter(
+                Name=value,
+                WithDecryption=True,
+            )
+            return ssmResponse["Parameter"]["Value"]
+        else:
+            raise RuntimeError(
+                "SLACK_WEBHOOK_URL_SOURCE_TYPE is not valid, it should be one of: text, secretsmanager, ssm"
+            )
+
+    except Exception as e:
+        raise RuntimeError(
+            f"Error getting slack credentials from {source_type} `{value}`: {e}"
+        ) from e
+
+
+if SLACK_WEBHOOK_URL_SOURCE_TYPE not in ("text", "secretsmanager", "ssm"):
+    raise RuntimeError(
+        "SLACK_WEBHOOK_URL_SOURCE_TYPE is not valid, it should be one of: text, secretsmanager, ssm"
     )
 
-    SLACK_WEBHOOK_URL = secretsmanagerResponse["SecretString"]
+SLACK_WEBHOOK_URL = get_slack_credentials(
+    SLACK_WEBHOOK_URL, SLACK_WEBHOOK_URL_SOURCE_TYPE
+)
 
 # ---------------------------------------------------------------------------------------------------------------------
 # HELPER FUNCTIONS

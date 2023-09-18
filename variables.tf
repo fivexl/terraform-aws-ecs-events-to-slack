@@ -27,8 +27,8 @@ variable "role_name" {
 variable "slack_webhook_url_source_type" {
   description = "Define where to get the slack webhook URL for variable slack_webhook_url. Either as text input or from an AWS secretsmanager lookup"
   validation {
-    condition     = contains(["text", "secretsmanager"], var.slack_webhook_url_source_type)
-    error_message = "Invalid source type. Must be one of 'text', 'secretsmanager'"
+    condition     = contains(["text", "secretsmanager", "ssm"], var.slack_webhook_url_source_type)
+    error_message = "Invalid source type. Must be one of 'text', 'secretsmanager', 'ssm"
   }
   type    = string
   default = "text"
