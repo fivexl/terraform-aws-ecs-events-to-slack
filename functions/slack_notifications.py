@@ -5,6 +5,10 @@ import os
 
 import boto3
 
+# Clients 
+client_logs = boto3.client('logs')
+client_ecs = boto3.client("ecs")
+
 # Boolean flag, which determins if the incoming even should be printed to the output.
 LOG_EVENTS = os.getenv("LOG_EVENTS", "False").lower() in ("true", "1", "t", "yes", "y")
 
@@ -13,6 +17,11 @@ logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
+# Enable or disable trying to get the logs from the ECS task
+GET_ECS_TASK_LOGS = os.getenv("GET_ECS_TASK_LOGS", "False").lower() in ("true", "1", "t", "yes", "y")
+
+# Application container name
+APP_CONTAINER_NAME = os.getenv("APP_CONTAINER_NAME", "app")
 
 SLACK_WEBHOOK_URL_SOURCE_TYPE = os.getenv(
     "SLACK_WEBHOOK_URL_SOURCE_TYPE", "text"
@@ -66,14 +75,100 @@ SLACK_WEBHOOK_URL = get_slack_credentials(
     SLACK_WEBHOOK_URL, SLACK_WEBHOOK_URL_SOURCE_TYPE
 )
 
+
 # ---------------------------------------------------------------------------------------------------------------------
 # HELPER FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
+# Input: CloudWatch Log Group Name and Log Stream Name
+# Output: Last 2 logs from the log stream { 'timestamp': 123, 'message': 'string', 'ingestionTime': 123 },
+def get_last_logs_cw(log_group_name, log_stream_name):
+    count = 2
+    events = []
+    next_token = None
+    log.info(f"Getting last {count} logs from log group: {log_group_name} and log stream: {log_stream_name}")
+    while len(events) < count:
+        kwargs = {
+            'logGroupName': log_group_name,
+            'logStreamName': log_stream_name,
+            'limit': count - len(events),
+            'startFromHead': False
+        }
+        if next_token:
+            kwargs['nextToken'] = next_token
+
+        events_response = client_logs.get_log_events(**kwargs)
+
+        if events_response.get('events'):
+            events.extend(events_response['events'])
+
+        # Check for next backward token and update it; otherwise, break
+        # Based on docs, If you have reached the end of the stream, it returns the same token you passed in
+        if 'nextBackwardToken' in events_response:
+            if next_token == events_response['nextBackwardToken']:
+                break  # No new token, exit the loop
+            next_token = events_response['nextBackwardToken']
+        else:
+            break
+
+    if not events:
+        raise Exception("No log events found")
+    #TODO: if message is too long, trim it
+    return events
+
+# Input: ECS TaskDefinition ARN and Task ID
+# Output: Logs from the task
+def get_logs(task_definition, task_id, container_name_to_get_defails):
+    result = ""
+
+    if task_id is None:
+        log.error("Task ID is not defined for taskDefinition: `{}`".format(task_definition))
+        return result
+    
+    # get the task definition without tags
+    task_definition = client_ecs.describe_task_definition(taskDefinition=task_definition)
+    for container in task_definition["taskDefinition"]["containerDefinitions"]:
+        last_logs = []
+        # Skip non-essential containers
+        if container.get("essential", False) is False:
+            continue
+        log_driver = container.get("logConfiguration", {}).get("logDriver", "")
+        container_name = container.get("name", "")
+        # Skip unsupported log drivers
+        if log_driver != "awslogs":
+            continue
+
+        log_group = container.get("logConfiguration", {}).get("options", {}).get("awslogs-group", "")
+        log_stream_prefix = container.get("logConfiguration", {}).get("options", {}).get("awslogs-stream-prefix", "")
+        log_region = container.get("logConfiguration", {}).get("options", {}).get("awslogs-region", "")
+        if not log_group or not log_stream_prefix or not log_region:
+            log.error("Log group or stream or log_region is not defined for container: `{}`".format(container))
+            continue
+
+        # Try to get the last logs from CloudWatch
+        if container_name == container_name_to_get_defails:
+            last_logs = get_last_logs_cw(log_group, f"{log_stream_prefix}/{container_name}/{task_id}")
+
+        # Fix the log group and stream
+        log_group = log_group.replace("/", "%2F")
+        log_stream_prefix = log_stream_prefix.replace("/", "%2F")
+        logs_link = f"https://{log_region}.console.aws.amazon.com/cloudwatch/home?region={log_region}#logsV2:log-groups/log-group/{log_group}/log-events/{log_stream_prefix}%2F{container_name}%2F{task_id}"
+
+        # transform and fix the logs link
+        result = result + f"\n [Logs {container_name}]({logs_link})"
+        # get the last logs
+        
+        if last_logs:
+            result = result + "\n" + "```"
+            for log in last_logs:
+                result = result + log["message"] + "\n"
+            result = result + "```"   
+            
+    return result
+
+
 # Input: EventBridge Message detail_type and detail
 # Output: mrkdwn text
-
-
 def ecs_events_parser(detail_type, detail):
     emoji_event_type = {
         "ERROR": ":exclamation:",
@@ -184,10 +279,10 @@ def ecs_events_parser(detail_type, detail):
             )
             task_definition = detail["taskDefinitionArn"]
         try:
-            detail["taskArn"].split(":")[5].split("/")[2]
+            task_id = detail["taskArn"].split(":")[5].split("/")[2]
         except Exception:
             log.error("Error parsing taskArn: `{}`".format(detail["taskArn"]))
-            detail["taskArn"]
+            task_id = None
         result = (
             "*Event Detail:* "
             + "\n"
@@ -227,6 +322,9 @@ def ecs_events_parser(detail_type, detail):
                         + ": "
                         + str(container.get("exitCode", "unknown"))
                     )
+        if GET_ECS_TASK_LOGS and "taskDefinitionArn" in detail:
+            result = result + get_logs(detail["taskDefinitionArn"], task_id, APP_CONTAINER_NAME)
+                
         return result
 
     return f"*Event Detail:* ```{json.dumps(detail, indent=4)}```"
