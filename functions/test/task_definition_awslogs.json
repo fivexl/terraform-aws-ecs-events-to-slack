@@ -1,0 +1,186 @@
+{
+    "taskDefinition": {
+      "taskDefinitionArn": "arn:aws:ecs:eu-central-1:111111111111:task-definition/example-api-v1:94",
+      "containerDefinitions": [
+        {
+          "name": "app",
+          "image": "111111111111.dkr.ecr.eu-central-1.amazonaws.com/example-api:image",
+          "cpu": 0,
+          "portMappings": [
+            {
+              "containerPort": 8080,
+              "hostPort": 8080,
+              "protocol": "tcp"
+            }
+          ],
+          "essential": true,
+          "command": [],
+          "environment": [
+            {
+              "name": "AWS_REGION",
+              "value": "eu-central-1"
+            },
+            {
+              "name": "AWS_DEFAULT_REGION",
+              "value": "eu-central-1"
+            }
+          ],
+          "mountPoints": [],
+          "volumesFrom": [],
+          "linuxParameters": {
+            "initProcessEnabled": true
+          },
+          "secrets": [],
+          "dependsOn": [],
+          "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+              "awslogs-group": "/ecs/test/example-api-v1",
+              "awslogs-region": "eu-central-1",
+              "awslogs-stream-prefix": "/example-api-v1"
+            }
+          },
+          "healthCheck": {
+            "command": [
+              "CMD",
+              "wget",
+              "--no-verbose",
+              "--tries=1",
+              "--spider",
+              "http://localhost:3412/health"
+            ],
+            "interval": 15,
+            "timeout": 10,
+            "retries": 5,
+            "startPeriod": 10
+          },
+          "systemControls": []
+        },
+        {
+          "name": "envoy",
+          "image": "111111111111.dkr.ecr.eu-central-1.amazonaws.com/common/aws-appmesh-envoy:v1.22.0.0-prod",
+          "cpu": 0,
+          "portMappings": [],
+          "essential": false,
+          "environment": [],
+          "mountPoints": [],
+          "volumesFrom": [],
+          "linuxParameters": {
+            "initProcessEnabled": true
+          },
+          "secrets": [],
+          "user": "1337",
+          "ulimits": [
+            {
+              "name": "nofile",
+              "softLimit": 15000,
+              "hardLimit": 15000
+            }
+          ],
+          "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+              "awslogs-group": "/ecs/test/example-api-v1",
+              "awslogs-region": "eu-central-1",
+              "awslogs-stream-prefix": "/example-api-v1"
+            }
+          },
+          "healthCheck": {
+            "command": [
+              "CMD-SHELL",
+              "curl -s http://localhost:9901/server_info | grep state | grep -q LIVE"
+            ],
+            "interval": 5,
+            "timeout": 10,
+            "retries": 10,
+            "startPeriod": 5
+          },
+          "systemControls": []
+        },
+        {
+          "name": "adot",
+          "image": "111111111111.dkr.ecr.eu-central-1.amazonaws.com/common/aws-otel-collector:v0.18.0",
+          "cpu": 0,
+          "portMappings": [],
+          "essential": false,
+          "command": [
+            "--config=/etc/ecs/ecs-amp-xray-prometheus.yaml"
+          ],
+          "environment": [],
+          "mountPoints": [],
+          "volumesFrom": [],
+          "secrets": [],
+          "dependsOn": [
+            {
+              "containerName": "app",
+              "condition": "START"
+            }
+          ],
+          "user": "1337",
+          "ulimits": [],
+          "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+              "awslogs-group": "/ecs/test/example-api-v1",
+              "awslogs-region": "eu-central-1",
+              "awslogs-stream-prefix": "/example-api-v1"
+            }
+          },
+          "healthCheck": {
+            "command": [
+              "CMD",
+              "/awscollector",
+              "-v",
+              "||",
+              "exit 1"
+            ],
+            "interval": 15,
+            "timeout": 10,
+            "retries": 10,
+            "startPeriod": 5
+          },
+          "systemControls": []
+        }
+      ],
+      "family": "example-api-v1",
+      "taskRoleArn": "arn:aws:iam::111111111111:role/example-api",
+      "executionRoleArn": "arn:aws:iam::111111111111:role/example-api",
+      "networkMode": "awsvpc",
+      "revision": 1,
+      "volumes": [],
+      "status": "ACTIVE",
+      "requiresAttributes": [],
+      "placementConstraints": [],
+      "compatibilities": [
+        "EC2",
+        "FARGATE"
+      ],
+      "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+      },
+      "requiresCompatibilities": [
+        "FARGATE"
+      ],
+      "cpu": "256",
+      "memory": "512",
+      "proxyConfiguration": {
+        "type": "APPMESH",
+        "containerName": "envoy",
+        "properties": [
+          {
+            "name": "ProxyIngressPort",
+            "value": "15000"
+          },
+          {
+            "name": "AppPorts",
+            "value": "8080"
+          }
+        ]
+      },
+      "registeredAt": "2024-01-08T18:49:18.855000+07:00",
+      "registeredBy": "arn:aws:sts::111111111111:assumed-role/testing-example-api"
+    },
+    "tags": []
+  }
+  
