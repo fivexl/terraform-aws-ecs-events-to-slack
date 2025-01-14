@@ -29,6 +29,18 @@ variable "role_name" {
   default     = null
 }
 
+variable "create_role" {
+  description = "Controls whether IAM role for Lambda Function should be created"
+  type        = bool
+  default     = true
+}
+
+variable "lambda_role" {
+  description = "IAM role ARN attached to the Lambda Function. This governs both who / what can invoke your Lambda Function, as well as what resources our Lambda Function has access to. See Lambda Permission Model for more details."
+  type        = string
+  default     = ""
+}
+
 variable "slack_webhook_url_source_type" {
   description = "Define where to get the slack webhook URL for variable slack_webhook_url. Either as text input or from an AWS secretsmanager lookup"
   validation {
