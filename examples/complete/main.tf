@@ -9,7 +9,9 @@ module "ecs_to_slack" {
 
   # Enable ECS task state change events
   enable_ecs_task_state_event_rule = true
-
+  ecs_task_state_event_rule_detail = {
+    clusterArn = ["arn:aws:ecs:us-east-1:123333333333:cluster/your-cluster-name"]
+  }
   slack_config = {
     channel_id   = "1234567890"  # Your Slack workspace ID
     workspace_id = "1234567890"   # Your Slack channel ID
