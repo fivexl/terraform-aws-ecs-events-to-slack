@@ -6,7 +6,7 @@
 variable "name" {
   description = "The string which will be used for the name of AWS Lambda function and other created resources"
   type        = string
-  default     = "ecs-events-to-slack"
+  default     = "ecs-events-to-amazon-q"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

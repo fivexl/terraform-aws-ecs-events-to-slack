@@ -11,7 +11,6 @@ resource "aws_sns_topic_policy" "prod_chatbot" {
       {
         Sid    = "AllowSNSPublish"
         Effect = "Allow"
-        # Principal = "*"
         Principal = {
           "Service" : "chatbot.amazonaws.com"
         },
@@ -27,13 +26,6 @@ resource "aws_sns_topic_policy" "prod_chatbot" {
         Action   = "sns:Publish"
         Resource = aws_sns_topic.prod_chatbot.arn
       },
-      # {
-      #   Sid       = "AllowSNSSubscriptions"
-      #   Effect    = "Allow"
-      #   Principal = "*"
-      #   Action    = "sns:Subscribe"
-      #   Resource  = aws_sns_topic.prod_chatbot.arn
-      # },
       {
         Sid    = "AllowChatbotSubscriptions"
         Effect = "Allow"
