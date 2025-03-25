@@ -14,65 +14,11 @@ log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
 
-SLACK_WEBHOOK_URL_SOURCE_TYPE = os.getenv(
-    "SLACK_WEBHOOK_URL_SOURCE_TYPE", "text"
-).lower()
-SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "")
 
-
-def get_slack_credentials(value: str, source_type: str) -> str:
-    if not value:
-        raise RuntimeError(
-            "The required env variable SLACK_WEBHOOK_URL is not set or empty!"
-        )
-    try:
-        if source_type == "text":
-            log.info("Getting slack credentials as plain text")
-            return value
-
-        elif source_type == "secretsmanager":
-            log.info("Getting slack credentials from secretsmanager")
-            secretsmanager = boto3.client("secretsmanager")
-            secretsmanagerResponse = secretsmanager.get_secret_value(
-                SecretId=value,
-            )
-            return secretsmanagerResponse["SecretString"]
-
-        elif source_type == "ssm":
-            log.info("Getting slack credentials from ssm")
-            ssm = boto3.client("ssm")
-            ssmResponse = ssm.get_parameter(
-                Name=value,
-                WithDecryption=True,
-            )
-            return ssmResponse["Parameter"]["Value"]
-        else:
-            raise RuntimeError(
-                "SLACK_WEBHOOK_URL_SOURCE_TYPE is not valid, it should be one of: text, secretsmanager, ssm"
-            )
-
-    except Exception as e:
-        raise RuntimeError(
-            f"Error getting slack credentials from {source_type} `{value}`: {e}"
-        ) from e
-
-
-if SLACK_WEBHOOK_URL_SOURCE_TYPE not in ("text", "secretsmanager", "ssm"):
-    raise RuntimeError(
-        "SLACK_WEBHOOK_URL_SOURCE_TYPE is not valid, it should be one of: text, secretsmanager, ssm"
-    )
-
-SLACK_WEBHOOK_URL = get_slack_credentials(
-    SLACK_WEBHOOK_URL, SLACK_WEBHOOK_URL_SOURCE_TYPE
-)
 
 # ---------------------------------------------------------------------------------------------------------------------
 # HELPER FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
-
-# Input: EventBridge Message detail_type and detail
-# Output: mrkdwn text
-
 
 def ecs_events_parser(detail_type, detail):
     emoji_event_type = {
@@ -234,79 +180,56 @@ def ecs_events_parser(detail_type, detail):
 
 # Input: EventBridge Message
 # Output: Slack Message
-def event_to_slack_message(event):
+def event_to_amazon_q(event):
     event_id = event.get("id")
     detail_type = event.get("detail-type")
     account = event.get("account")
     time = event.get("time")
     region = event.get("region")
+    detail = event.get("detail")
+
+    # Parse resource ARNs
     resources = []
-    for resource in event["resources"]:
+    for resource in event.get("resources", []):
         try:
             resources.append(":dart: " + resource.split(":")[5])
         except Exception:
-            log.error("Error parsing the resource ARN: `{}`".format(resource))
+            log.error(f"Error parsing the resource ARN: `{resource}`")
             resources.append(":dart: " + resource)
-    detail = event.get("detail")
+
     known_detail = ecs_events_parser(detail_type, detail)
-    blocks = []
-    contexts = []
-    title = f"*{detail_type}*"
-    blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": title}})
-    if resources:
-        blocks.append(
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "*Resources*:\n" + "\n".join(resources),
-                },
+
+    # Format message for Amazon Q
+    message = {
+        "version": "1.0",
+        "source": "custom",
+        "id": event_id,
+        "content": {
+            "textType": "client-markdown",
+            "title": detail_type,
+            "description": known_detail if known_detail else f"```{json.dumps(detail, indent=4)}```",
+            "keywords": [region] if region else []
+        },
+        "metadata": {
+            "threadId": event_id,
+            "summary": detail_type,
+            "eventType": detail_type,
+            "relatedResources": resources,
+            "additionalContext": {
+                "account": account,
+                "time": time
             }
-        )
-    if detail and not known_detail:
-        blocks.append(
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*Event Detail:* ```{json.dumps(detail, indent=4)}```",
-                },
-            }
-        )
-    if known_detail:
-        blocks.append(
-            {"type": "section", "text": {"type": "mrkdwn", "text": known_detail}}
-        )
-    contexts.append({"type": "mrkdwn", "text": f"Account: {account} Region: {region}"})
-    contexts.append({"type": "mrkdwn", "text": f"Time: {time} UTC Id: {event_id}"})
-    blocks.append({"type": "context", "elements": contexts})
-    blocks.append({"type": "divider"})
-    return {"blocks": blocks}
+        }
+    }
+
+    return message
 
 
-# Slack web hook example
-# https://hooks.slack.com/services/XXXXXXX/XXXXXXX/XXXXXXXXXX
-def post_slack_message(hook_url, message):
-    log.debug(f"Sending message: {json.dumps(message, indent=4)}")
-    headers = {"Content-type": "application/json"}
-    connection = http.client.HTTPSConnection("hooks.slack.com")
-    connection.request(
-        "POST",
-        hook_url.replace("https://hooks.slack.com", ""),
-        json.dumps(message),
-        headers,
-    )
-    response = connection.getresponse()
-    log.debug(
-        "Response: {}, message: {}".format(response.status, response.read().decode())
-    )
-    return response.status
 
 
 # ---------------------------------------------------------------------------------------------------------------------
 # LAMBDA HANDLER
 # ---------------------------------------------------------------------------------------------------------------------
-
 
 def lambda_handler(event, context):
     if LOG_EVENTS:
@@ -315,16 +238,30 @@ def lambda_handler(event, context):
     if event.get("source") != "aws.ecs":
         raise ValueError('The source of the incoming event is not "aws.ecs"')
 
-    slack_message = event_to_slack_message(event)
-    response = post_slack_message(SLACK_WEBHOOK_URL, slack_message)
-    if response != 200:
-        log.error(
-            "Error: received status `{}` using event `{}` and context `{}`".format(
-                response, event, context
-            )
-        )
-    return json.dumps({"code": response})
+    try:
+ 
+        # Get region from environment variable or use current region
+        region = os.getenv('AWS_REGION', 'us-east-1')
+        sns_client = boto3.client('sns', region_name=region)
 
+        # Get SNS topic ARN from environment variable
+        amazon_q_sns_topic_arn = os.getenv('SNS_TOPIC_ARN')
+        if not amazon_q_sns_topic_arn:
+            raise ValueError("SNS_TOPIC_ARN environment variable is not set")
+
+   
+
+        response = sns_client.publish(
+            TopicArn=amazon_q_sns_topic_arn,
+            Message=json.dumps(event_to_amazon_q(event)),
+        )
+
+        log.info(f"Successfully published message to SNS: {response}")
+        return json.dumps({"code": response})
+
+    except Exception as e:
+        log.error(f"Error processing event: {str(e)}")
+        raise
 
 # For local testing
 if __name__ == "__main__":

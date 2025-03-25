@@ -6,17 +6,8 @@
 variable "name" {
   description = "The string which will be used for the name of AWS Lambda function and other created resources"
   type        = string
+  default     = "ecs-events-to-slack"
 }
-
-variable "slack_webhook_url" {
-  description = <<EOT
-  (default) A Slack incoming webhook URL. 
-  (if slack_webhook_url_source_type is 'secret') A secretsmanager secret name 
-  (if slack_webhook_url_source_type is 'ssm') The full path to the SSM parameter including the initial slash.
-  EOT
-  type        = string
-}
-
 
 # ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
@@ -29,14 +20,16 @@ variable "role_name" {
   default     = null
 }
 
-variable "slack_webhook_url_source_type" {
-  description = "Define where to get the slack webhook URL for variable slack_webhook_url. Either as text input or from an AWS secretsmanager lookup"
-  validation {
-    condition     = contains(["text", "secretsmanager", "ssm"], var.slack_webhook_url_source_type)
-    error_message = "Invalid source type. Must be one of 'text', 'secretsmanager', 'ssm'."
-  }
-  type    = string
-  default = "text"
+variable "create_role" {
+  description = "Controls whether IAM role for Lambda Function should be created"
+  type        = bool
+  default     = true
+}
+
+variable "lambda_role" {
+  description = "IAM role ARN attached to the Lambda Function. This governs both who / what can invoke your Lambda Function, as well as what resources our Lambda Function has access to. See Lambda Permission Model for more details."
+  type        = string
+  default     = ""
 }
 
 variable "enable_ecs_task_state_event_rule" {
@@ -116,3 +109,22 @@ variable "lambda_memory_size" {
   type        = number
   default     = 256
 }
+
+
+variable "slack_config" {
+  description = "Slack configuration, example: slack_config= {channel_id = '' workspace_id = ''}"
+  type        = any
+  default     = {}
+}
+
+
+
+#Testing is required for this module
+variable "teams_config" {
+  description = "Teams configuration, example: teams_config = {channel_id = '' team_id = '' teams_tenant_id = ''}"
+  type        = any
+  default     = {}
+}
+
+
+
