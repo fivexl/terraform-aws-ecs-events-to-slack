@@ -1,7 +1,7 @@
 [![FivexL](https://releases.fivexl.io/fivexlbannergit.jpg)](https://fivexl.io/)
 
 # terraform-aws-ecs-events-to-slack
-Rules for Amazon EventBridge that fetch ECS events and send them to Slack
+Rules for Amazon EventBridge that fetch ECS events and send them to Slack, Teams and Chime
 
 # AWS Chatbot Integration for Slack, Teams, and Chime
 
@@ -16,6 +16,19 @@ This module provides integration between AWS services and various chat platforms
 - AWS Chatbot integration for seamless communication
 - Event-driven notifications from AWS services
 - Customizable message formatting
+- Built-in EventBridge rules for ECS events
+- SNS topic for message delivery
+- Configurable IAM roles and policies
+
+## Resources
+
+This module creates the following resources:
+
+- AWS Chatbot configuration for Slack/Teams
+- Lambda function for processing events
+- EventBridge rules for monitoring AWS services
+- SNS topic for message delivery
+- IAM roles and policies for Lambda and Chatbot
 
 ## Prerequisites
 
