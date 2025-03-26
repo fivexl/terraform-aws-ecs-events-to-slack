@@ -56,8 +56,7 @@ module "amazon_q_notifications" {
 
   function_name = var.name
   role_name     = var.role_name
-  create_role   = var.create_role
-  lambda_role   = var.lambda_role
+  create_role   = true
   description   = "Receive events from EventBridge and send them to Amazon Q"
   handler       = "amazon_q_notifications.lambda_handler"
   source_path   = "${path.module}/functions/amazon_q_notifications.py"

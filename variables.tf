@@ -20,17 +20,6 @@ variable "role_name" {
   default     = null
 }
 
-variable "create_role" {
-  description = "Controls whether IAM role for Lambda Function should be created"
-  type        = bool
-  default     = true
-}
-
-variable "lambda_role" {
-  description = "IAM role ARN attached to the Lambda Function. This governs both who / what can invoke your Lambda Function, as well as what resources our Lambda Function has access to. See Lambda Permission Model for more details."
-  type        = string
-  default     = ""
-}
 
 variable "enable_ecs_task_state_event_rule" {
   description = "The boolean flag enabling the EvenBridge Rule for `ECS Task State Change` events. The `detail` section of this rule is configured with `ecs_task_state_event_rule_detail` variable."
