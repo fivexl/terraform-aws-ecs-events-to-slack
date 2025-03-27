@@ -12,96 +12,51 @@ This module provides integration between AWS services and various chat platforms
 - Support for multiple chat platforms:
   - Slack (fully tested and supported)
   - Microsoft Teams (requires paid Microsoft 365 account, configuration not fully tested)
-  - Amazon Chime (no Terraform configuration available yet)
-- AWS Chatbot integration for seamless communication
-- Event-driven notifications from AWS services
-- Customizable message formatting
-- Built-in EventBridge rules for ECS events
-- SNS topic for message delivery
-- Configurable IAM roles and policies
-
-## Resources
-
-This module creates the following resources:
-
-- AWS Chatbot configuration for Slack/Teams
-- Lambda function for processing events
-- EventBridge rules for monitoring AWS services
-- SNS topic for message delivery
-- IAM roles and policies for Lambda and Chatbot
+  - Amazon Chime (no Terraform configuration available yet) 
 
 ## Prerequisites
 
-- AWS Account
 - Slack workspace (for Slack integration)
 - Microsoft Teams (for Teams integration)
-- Amazon Chime (for Chime integration)
-- AWS Chatbot configured in your AWS account
 
-## Usage
 
-### Slack Integration
+
+### Setting Up AWS Q in Slack
+
+Before deploying this module, you must set up the Slack workspace. Follow the steps below or consult the official documentation.
+
+1. In Slack's left navigation pane, select Apps.
+   - Note: If Apps isn't visible, click on More, then choose Apps.
+2. If AWS Q isn't listed, click on Browse Apps Directory (or try searching for AWS Chatbot).
+3. Search for the AWS Q app and click Add to integrate it into your workspace.
+4. Navigate to the AWS Q console.
+5. Under "Configure a chat client", select Slack, then Configure client.
+6. From the dropdown list, choose the Slack workspace you wish to use with AWS Q.
+7. Click Allow.
+8. The module will handle the rest - just provide it with the workspace ID and channel you want to use, and it will create the configuration.
+
+### Setting Up Amazon Chime
+
+Amazon Chime doesn't have Terraform configuration available yet, so it needs to be set up manually:
+
+1. Deploy the module and get the SNS topic ARN
+2. Go to the AWS Console and use the acquired SNS topic to create a topic -> Channel configuration
+3. Follow this guide: [Amazon Chime Setup Guide](https://docs.aws.amazon.com/chatbot/latest/adminguide/chime-setup.html#chime-sets)
+
+### Setting Up Microsoft Teams
+
+This part of the module hasn't been tested because Microsoft Teams requires a paid plan to use bot features. Please be aware that some issues might occur.
+
+1. Follow the first step from this guide to set up the client: [Microsoft Teams Setup Guide](https://docs.aws.amazon.com/chatbot/latest/adminguide/teams-setup.html)
+2. Theoretically, by providing the following configuration, the module should handle everything else, but as stated above, it hasn't been tested:
 
 ```hcl
-module "chatbot" {
-  source = "path/to/module"
-
-  name = "my-chatbot"
-  
-  slack_config = {
-    channel_id   = "YOUR_SLACK_CHANNEL_ID"
-    workspace_id = "YOUR_SLACK_WORKSPACE_ID"
-  }
+teams_config = {
+  team_id         = "YOUR_TEAMS_ID"
+  channel_id      = "YOUR_TEAMS_CHANNEL_ID"
+  teams_tenant_id = "YOUR_TEAMS_TENANT_ID"
 }
 ```
-
-### Microsoft Teams Integration
-
-```hcl
-module "chatbot" {
-  source = "path/to/module"
-
-  name = "my-chatbot"
-  
-  teams_config = {
-    team_id         = "YOUR_TEAMS_ID"
-    channel_id      = "YOUR_TEAMS_CHANNEL_ID"
-    teams_tenant_id = "YOUR_TEAMS_TENANT_ID"
-  }
-}
-```
-
-⚠️ **Important Notes**:
-- Microsoft Teams integration requires a paid Microsoft 365 account
-- Teams configuration is not fully tested due to account requirements
-- Amazon Chime integration is planned but not yet implemented in Terraform
-
-## AWS Chatbot Setup
-
-1. Configure AWS Chatbot in your AWS Console:
-   - Go to AWS Chatbot console
-   - Choose your chat platform (Slack/Teams/Chime)
-   - Follow the setup wizard to connect your workspace/team
-   - Note down the required IDs (channel_id, workspace_id, etc.)
-
-2. Required Permissions:
-   - AWS Chatbot needs appropriate IAM roles
-   - Chat platforms need proper access tokens
-   - SNS topics need correct policies
-
-3. Platform-specific Requirements:
-   - Slack: Requires workspace admin permissions
-   - Teams: Requires Microsoft 365 admin access
-   - Chime: Requires AWS account permissions
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Example
 ```hcl
 module "ecs_to_slack" {
