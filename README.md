@@ -1,11 +1,11 @@
 [![FivexL](https://releases.fivexl.io/fivexlbannergit.jpg)](https://fivexl.io/)
 
-# terraform-aws-ecs-events-to-slack
+# terraform-aws-ecs-events-to-amazon-q
 Rules for Amazon EventBridge that fetch ECS events and send them to Slack, Teams and Chime
 
 # AWS Chatbot Integration for Slack, Teams, and Chime
 
-This module provides integration between AWS services and various chat platforms (Slack, Microsoft Teams, and Amazon Chime) using AWS Chatbot.
+This module provides integration between AWS ECS and various chat platforms (Slack, Microsoft Teams, and Amazon Chime) using AWS Chatbot.
 
 ## Features
 
@@ -13,12 +13,6 @@ This module provides integration between AWS services and various chat platforms
   - Slack (fully tested and supported)
   - Microsoft Teams (requires paid Microsoft 365 account, configuration not fully tested)
   - Amazon Chime (no Terraform configuration available yet) 
-
-## Prerequisites
-
-- Slack workspace (for Slack integration)
-- Microsoft Teams (for Teams integration)
-
 
 
 ### Setting Up AWS Q in Slack
@@ -50,13 +44,6 @@ This part of the module hasn't been tested because Microsoft Teams requires a pa
 1. Follow the first step from this guide to set up the client: [Microsoft Teams Setup Guide](https://docs.aws.amazon.com/chatbot/latest/adminguide/teams-setup.html)
 2. Theoretically, by providing the following configuration, the module should handle everything else, but as stated above, it hasn't been tested:
 
-```hcl
-teams_config = {
-  team_id         = "YOUR_TEAMS_ID"
-  channel_id      = "YOUR_TEAMS_CHANNEL_ID"
-  teams_tenant_id = "YOUR_TEAMS_TENANT_ID"
-}
-```
 ## Example
 ```hcl
 module "ecs_to_slack" {
