@@ -207,7 +207,7 @@ def event_to_amazon_q(event):
         "content": {
             "textType": "client-markdown",
             "title": detail_type,
-            "description": known_detail if known_detail else f"```{json.dumps(detail, indent=4)}```",
+            "description": known_detail if known_detail else f"```{json.dumps(detail, indent=4)}```" + f"\r\n• account: {account}" + f"\r\n• time: {time}", 
             "keywords": [region] if region else []
         },
         "metadata": {
