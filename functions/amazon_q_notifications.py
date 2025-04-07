@@ -250,7 +250,7 @@ def lambda_handler(event, context):
             raise ValueError("SNS_TOPIC_ARN environment variable is not set")
 
    
-
+        # Publish message to Amazon Q
         response = sns_client.publish(
             TopicArn=amazon_q_sns_topic_arn,
             Message=json.dumps(event_to_amazon_q(event)),
