@@ -42,7 +42,7 @@ Amazon Chime doesn't have Terraform configuration available yet, so it needs to 
 This part of the module hasn't been tested because Microsoft Teams requires a paid plan to use bot features. Please be aware that some issues might occur.
 
 1. Follow the first step from this guide to set up the client: [Microsoft Teams Setup Guide](https://docs.aws.amazon.com/chatbot/latest/adminguide/teams-setup.html)
-2. Theoretically, by providing the following configuration, the module should handle everything else, but as stated above, it hasn't been tested:
+2. Theoretically, by providing the correct configuration, the module should handle everything else, but as stated above, it hasn't been tested
 
 ## Example
 ```hcl
