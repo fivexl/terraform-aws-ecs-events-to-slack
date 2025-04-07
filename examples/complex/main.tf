@@ -75,4 +75,13 @@ module "ecs_to_slack_no_jenkins" {
     lastStatus    = ["STOPPED"]
     stoppedReason = [{ "anything-but" = "Stopped by Jenkins Amazon ECS PlugIn" }] # filter out jenkins ecs plugin events
   }
+  slack_config = {
+    channel_id   = "1234567890" # Your Slack workspace ID
+    workspace_id = "1234567890" # Your Slack channel ID
+  }
+  # teams_config = {
+  #   team_id         = "1234567890" # Your Teams id ID
+  #   channel_id      = "1234567890" # Your Teams channel ID
+  #   teams_tenant_id = "1234567890" # Your Teams tenant ID
+  # }
 }
