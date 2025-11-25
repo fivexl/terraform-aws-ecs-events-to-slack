@@ -1,4 +1,15 @@
-[![FivexL](https://releases.fivexl.io/fivexlbannergit.jpg)](https://fivexl.io/)
+[![FivexL](https://releases.fivexl.io/fivexlbannergit_new.png)](https://fivexl.io/#email-subscription)
+
+### Want practical AWS infrastructure insights?
+
+👉 [Subscribe to our newsletter](https://fivexl.io/#email-subscription) to get:
+
+- Real stories from real AWS projects  
+- No-nonsense DevOps tactics  
+- Cost, security & compliance patterns that actually work  
+- Expert guidance from engineers in the field
+
+=========================================================================
 
 # terraform-aws-ecs-events-to-slack
 Rules for Amazon EventBridge that fetch ECS events and send them to Slack
