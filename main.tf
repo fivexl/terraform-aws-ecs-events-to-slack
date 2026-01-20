@@ -40,12 +40,39 @@ resource "aws_cloudwatch_event_rule" "this" {
   tags = var.tags
 }
 
+resource "aws_ecr_repository" "lambda_repo" {
+  name                 = "ecs-events-to-slack-repo"
+  image_tag_mutability = "MUTABLE"
+  force_delete         = true
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
 resource "aws_cloudwatch_event_target" "this" {
   for_each = local.event_rules
 
   target_id = "${var.name}-${each.key}"
   arn       = module.slack_notifications.lambda_function_arn
   rule      = aws_cloudwatch_event_rule.this[each.key].name
+}
+
+resource "null_resource" "docker_build_push" {
+  triggers = {
+    # Re-build if these files change
+    docker_file = filemd5("${path.module}/functions/Dockerfile")
+    requirements = filemd5("${path.module}/functions/requirements.txt")
+    source_code = filemd5("${path.module}/functions/slack_notifications.py")
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+      aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${aws_ecr_repository.lambda_repo.repository_url}
+      docker build -t ${aws_ecr_repository.lambda_repo.repository_url}:latest -f functions/Dockerfile functions/
+      docker push ${aws_ecr_repository.lambda_repo.repository_url}:latest
+    EOF
+  }
 }
 
 module "slack_notifications" {
