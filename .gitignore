@@ -4,10 +4,24 @@
 # Terraform lockfile
 .terraform.lock.hcl
 
+terraform.tfvars
+*.tfvars.json
+
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+
 # .tfstate files
 *.tfstate
 *.tfstate.*
 *.tfplan
+
+.venv/
+__pycache__/
+*.pyc
+
+.DS_Store
 
 # Crash log files
 crash.log
