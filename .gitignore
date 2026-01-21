@@ -46,3 +46,17 @@ terraform.rc
 # Lambda directories
 builds/
 __pycache__/
+
+# Personal Project Tracking & Notes
+*.md
+!README.md
+!CONTRIBUTING.md
+!functions/README.md
+
+# AI/Agent Steering
+.kiro/
+AGENTS.md
+
+# IDE and Environment
+.python-version
+.env
