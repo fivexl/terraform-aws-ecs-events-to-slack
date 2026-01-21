@@ -1,1 +1,0 @@
-.kiro/steering_docs.md

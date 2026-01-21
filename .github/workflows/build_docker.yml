@@ -1,0 +1,65 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [ main ]
+    # OPTION: Path filtering
+    # WHY: This prevents unnecessary AWS costs and CI run-time by only triggering 
+    # a build when the actual Lambda code or Dockerfile is modified.
+    paths:
+      - 'functions/**'
+      - '.github/workflows/build_docker.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'functions/**'
+
+jobs:
+  build:
+    name: Build and Push to ECR
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # OPTION: GitHub Secrets
+          # WHY: Hardcoding keys is a security risk. Using secrets allows the 
+          # workflow to authenticate securely with your AWS account.
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        # OPTION: aws-actions/amazon-ecr-login
+        # WHY: This is the official AWS action. It handles the 'docker login' 
+        # complexity and provides the registry URI as an output for the next steps.
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          # OPTION: Hardcoded Repository Name
+          # WHY: This matches the 'name' defined in your main.tf aws_ecr_repository 
+          # resource: "ecs-events-to-slack-repo".
+          ECR_REPOSITORY: ecs-events-to-slack-repo 
+          # OPTION: latest tag
+          # WHY: Your main.tf image_uri is currently set to :latest. This ensures 
+          # that 'terraform apply' always pulls the most recent build without 
+          # needing to update the TF code for every commit.
+          IMAGE_TAG: latest
+        run: |
+          # OPTION: --platform linux/amd64
+          # WHY: Since you are developing on a Simons-MacBook-Pro (likely M1/M2 Silicon), 
+          # the image must be explicitly built for amd64 architecture to run on 
+          # standard AWS Lambda environments.
+          docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./functions
+          
+          # OPTION: Docker Push
+          # WHY: This finalizes the "CI instead of null_resource" task. The image 
+          # is now ready in ECR before the Terraform deployment step begins.
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
