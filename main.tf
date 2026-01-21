@@ -87,7 +87,7 @@ module "slack_notifications" {
   description   = "Receive events from EventBridge and send them to Slack"
 
   # --- DOCKER UPDATES ---
-  create_package = false 
+  create_package = false
   package_type   = "Image"
   image_uri      = "${aws_ecr_repository.lambda_repo.repository_url}:latest"
 
