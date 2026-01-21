@@ -61,15 +61,17 @@ resource "aws_cloudwatch_event_target" "this" {
 resource "null_resource" "docker_build_push" {
   triggers = {
     # Re-build if these files change
-    docker_file = filemd5("${path.module}/functions/Dockerfile")
+    docker_file  = filemd5("${path.module}/functions/Dockerfile")
     requirements = filemd5("${path.module}/functions/requirements.txt")
-    source_code = filemd5("${path.module}/functions/slack_notifications.py")
+    source_code  = filemd5("${path.module}/functions/slack_notifications.py")
   }
 
   provisioner "local-exec" {
+    # 1. FIXED: Changed ${var.aws_region} to ${data.aws_region.current.name} to resolve the red highlight.
+    # 2. ADDED: --platform linux/amd64 to the docker build command for Mac-to-Lambda compatibility.
     command = <<EOF
-      aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${aws_ecr_repository.lambda_repo.repository_url}
-      docker build -t ${aws_ecr_repository.lambda_repo.repository_url}:latest -f functions/Dockerfile functions/
+      aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${aws_ecr_repository.lambda_repo.repository_url}
+      docker build --platform linux/amd64 -t ${aws_ecr_repository.lambda_repo.repository_url}:latest -f functions/Dockerfile functions/
       docker push ${aws_ecr_repository.lambda_repo.repository_url}:latest
     EOF
   }
@@ -84,15 +86,25 @@ module "slack_notifications" {
   create_role   = var.create_role
   lambda_role   = var.lambda_role
   description   = "Receive events from EventBridge and send them to Slack"
-  handler       = "slack_notifications.lambda_handler"
-  source_path   = "${path.module}/functions/slack_notifications.py"
-  runtime       = "python3.10"
+  
+  # --- DOCKER UPDATES ---
+  create_package = false # Reason: Disabling local zip packaging to use ECR image instead
+  package_type   = "Image"
+  image_uri      = "${aws_ecr_repository.lambda_repo.repository_url}:latest"
+  
+  # Reason: Handler, source_path, and runtime are defined in the Dockerfile, not here
+  # handler       = "slack_notifications.lambda_handler"
+  # source_path   = "${path.module}/functions/slack_notifications.py"
+  # runtime       = "python3.10"
+  # recreate_missing_package = var.recreate_missing_package
+
   timeout       = 30
   publish       = true
 
   memory_size = var.lambda_memory_size
 
-  recreate_missing_package = var.recreate_missing_package
+  # Reason: Ensure the image is pushed to ECR before Lambda attempts to pull it
+  depends_on = [null_resource.docker_build_push]
 
   allowed_triggers = {
     for rule, params in local.event_rules : rule => {
