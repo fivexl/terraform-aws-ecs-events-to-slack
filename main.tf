@@ -43,7 +43,6 @@ resource "aws_cloudwatch_event_rule" "this" {
 resource "aws_ecr_repository" "lambda_repo" {
   name                 = "ecs-events-to-slack-repo"
   image_tag_mutability = "MUTABLE"
-  force_delete         = true
 
   image_scanning_configuration {
     scan_on_push = true
