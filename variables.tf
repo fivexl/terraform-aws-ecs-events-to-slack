@@ -137,10 +137,13 @@ variable "lambda_memory_size" {
   default     = 256
 }
 
-# REASON: DEPRECATED - Unused after migrating Docker build to GitHub Actions CI. 
-# Previously used by the local-exec null_resource to configure the AWS CLI for pushing to ECR.
-# variable "aws_region" {
-#   description = "The AWS region to deploy to"
-#   type        = string
-#   default     = "us-east-1"
-# }
+variable "github_repo" {
+  description = "The GitHub repository in format 'org/repo'"
+  type        = string
+}
+
+variable "recreate_missing_package" {
+  description = "Whether to recreate missing Lambda package"
+  type        = bool
+  default     = true
+}
