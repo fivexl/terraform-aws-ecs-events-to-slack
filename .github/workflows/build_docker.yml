@@ -1,18 +1,15 @@
 name: Build and Push Docker Image
 
 on:
-  push:
-    branches: [ main ]
-    # OPTION: Path filtering
-    # WHY: This prevents unnecessary AWS costs and CI run-time by only triggering 
-    # a build when the actual Lambda code or Dockerfile is modified.
-    paths:
-      - 'functions/**'
-      - '.github/workflows/build_docker.yml'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'functions/**'
+  # CHANGED: Replaced push/pull_request triggers with release
+  # REASON: Per Anton's request, we only build on releases to prevent unreviewed 
+  # PR code from overwriting images and to align with manual versioning.
+  release:
+    types: [published]
+
+permissions:
+  id-token: write # REASON: Required for OIDC authentication
+  contents: read
 
 jobs:
   build:
@@ -26,40 +23,24 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          # OPTION: GitHub Secrets
-          # WHY: Hardcoding keys is a security risk. Using secrets allows the 
-          # workflow to authenticate securely with your AWS account.
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # CHANGED: Switched to OIDC role-to-assume
+          # REASON: Eliminates static credentials. This role is configured 
+          # to only allow pushes from the main branch.
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-ci-ecr-push-role
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
         id: login-ecr
-        # OPTION: aws-actions/amazon-ecr-login
-        # WHY: This is the official AWS action. It handles the 'docker login' 
-        # complexity and provides the registry URI as an output for the next steps.
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag, and push image to Amazon ECR
+      - name: Build, tag, and push image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          # OPTION: Hardcoded Repository Name
-          # WHY: This matches the 'name' defined in your main.tf aws_ecr_repository 
-          # resource: "ecs-events-to-slack-repo".
           ECR_REPOSITORY: ecs-events-to-slack-repo 
-          # OPTION: latest tag
-          # WHY: Your main.tf image_uri is currently set to :latest. This ensures 
-          # that 'terraform apply' always pulls the most recent build without 
-          # needing to update the TF code for every commit.
-          IMAGE_TAG: latest
+          # CHANGED: Using the release tag (e.g., v1.0.0) instead of 'latest'
+          # REASON: Prevents unreviewed PRs from overwriting the production image.
+          IMAGE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          # OPTION: --platform linux/amd64
-          # WHY: Since you are developing on a Simons-MacBook-Pro (likely M1/M2 Silicon), 
-          # the image must be explicitly built for amd64 architecture to run on 
-          # standard AWS Lambda environments.
-          docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./functions
-          
-          # OPTION: Docker Push
-          # WHY: This finalizes the "CI instead of null_resource" task. The image 
-          # is now ready in ECR before the Terraform deployment step begins.
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      # Build using the hardened multi-stage Dockerfile
+      # docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./functions
+      # docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

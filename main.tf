@@ -42,7 +42,11 @@ resource "aws_cloudwatch_event_rule" "this" {
 
 resource "aws_ecr_repository" "lambda_repo" {
   name                 = "ecs-events-to-slack-repo"
-  image_tag_mutability = "MUTABLE"
+  
+  # REASON: UPDATED - Hardening best practice requires immutable tags to prevent 
+  # attackers or bugs from overwriting valid image versions with malicious code.
+  # image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -57,8 +61,9 @@ resource "aws_cloudwatch_event_target" "this" {
   rule      = aws_cloudwatch_event_rule.this[each.key].name
 }
 
-# REASON FOR COMMENTING OUT: Moving Docker build/push logic to GitHub Actions (.github/workflows/build_docker.yml). 
-# This removes the dependency on the local machine's Docker daemon and credentials during 'terraform apply'.
+# REASON FOR COMMENTING OUT: Docker build/push logic has been moved to GitHub Actions 
+# (.github/workflows/build_docker.yml) to run on 'Release'. This removes the dependency 
+# on the local machine's Docker daemon and credentials during 'terraform apply'.
 # resource "null_resource" "docker_build_push" {
 #   triggers = {
 #     # Re-build if these files change
@@ -89,12 +94,20 @@ module "slack_notifications" {
   # --- DOCKER UPDATES ---
   create_package = false
   package_type   = "Image"
-  image_uri      = "${aws_ecr_repository.lambda_repo.repository_url}:latest"
+  
+  # REASON: UPDATED - Switched from 'latest' to specific version variable (var.image_version).
+  # This enforces manual versioning for production releases, preventing 'silent' updates
+  # and allowing for controlled rollbacks (Anton's Request).
+  # image_uri      = "${aws_ecr_repository.lambda_repo.repository_url}:latest"
+  image_uri      = "${aws_ecr_repository.lambda_repo.repository_url}:${var.image_version}"
 
-  # Reason: Handler, source_path, and runtime are defined in the Dockerfile, not here
+  # REASON: DEPRECATED - Handler, source_path, and runtime are defined in the Dockerfile 
+  # or irrelevant for Image package_type.
   # handler       = "slack_notifications.lambda_handler"
   # source_path   = "${path.module}/functions/slack_notifications.py"
   # runtime       = "python3.10"
+  
+  # REASON: DEPRECATED - Package management is handled by Docker CI, not local Terraform.
   # recreate_missing_package = var.recreate_missing_package
 
   timeout = 30
@@ -102,7 +115,7 @@ module "slack_notifications" {
 
   memory_size = var.lambda_memory_size
 
-  # REASON FOR COMMENTING OUT: Since the image is now built in CI prior to deployment, 
+  # REASON FOR COMMENTING OUT: Since the image is now built in CI prior to deployment (on Release), 
   # Terraform no longer needs to wait for a local null_resource to complete.
   # depends_on = [null_resource.docker_build_push]
 

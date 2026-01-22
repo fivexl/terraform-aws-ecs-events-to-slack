@@ -1,15 +1,42 @@
-# Use the AWS Lambda Python 3.10 base image (matching your .venv version)
-FROM public.ecr.aws/lambda/python:3.10
+# Stage 1: Build standalone binary
+FROM python:3.11-slim AS builder
+WORKDIR /app
 
-# Copy requirements.txt
-COPY requirements.txt ${LAMBDA_TASK_ROOT}
+# CHANGED: Installing build dependencies for PyInstaller
+# REASON: Required to compile the Python code into a binary. This allows us to 
+# remove the Python interpreter and shell from the final production image.
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev binutils && rm -rf /var/lib/apt/lists/*
 
-# Install the specified packages
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir pyinstaller
 
-# Copy the function code
-# Assuming slack_notifications.py contains your handler
-COPY slack_notifications.py ${LAMBDA_TASK_ROOT}
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Set the CMD to your handler (FileName.MethodName)
-CMD [ "slack_notifications.lambda_handler" ]
+COPY . .
+
+# CHANGED: Compiling Python to binary
+# REASON: Matches the sso-elevator pattern; enables use of a Distroless runtime 
+# to significantly reduce attack surface.
+RUN pyinstaller --onefile --name slack_notifier slack_notifications.py
+
+# Stage 2: Production Image
+# CHANGED: Switched to FivexL Secure Distroless (Debian 11)
+# REASON: Provides a solid set of preinstalled libs (glibc) while remaining 
+# shell-less and secure. Distroless images are more stable than scratch for Python binaries.
+FROM ghcr.io/fivexl/secure-container-image:base-python3-distroless-debian-11
+
+# Copy binary from builder
+COPY --from=builder /app/dist/slack_notifier /usr/bin/slack_notifier
+
+# CHANGED: Adding lprobe
+# REASON: Shell-less distroless images require binary-based health checks 
+# because standard tools like 'curl' or 'sh' are absent (FivexL Hardening Part 1).
+COPY --from=ghcr.io/fivexl/lprobe:0.0.7 /lprobe /usr/bin/lprobe
+
+# USER: Distroless images typically use a non-root user (e.g., 65532) by default.
+# We inherit this security benefit.
+
+HEALTHCHECK --interval=1m --timeout=3s \
+  CMD ["/usr/bin/lprobe", "-mode=http", "-port=8080"]
+
+ENTRYPOINT ["/usr/bin/slack_notifier"]

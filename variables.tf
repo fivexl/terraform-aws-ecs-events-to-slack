@@ -1,11 +1,19 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # REQUIRED PARAMETERS
-# You must provide a value for each of these parameters.
 # ---------------------------------------------------------------------------------------------------------------------
 
 variable "name" {
   description = "The string which will be used for the name of AWS Lambda function and other created resources"
   type        = string
+}
+
+# REASON: UPDATED - Manual versioning is now required for production releases.
+# This prevents 'latest' tag overwrites and provides a deployment gate.
+
+variable "image_version" {
+  description = "The ECR image tag to deploy (e.g., v1.0.0)"
+  type        = string
+  default     = "v0.1.0"
 }
 
 variable "slack_webhook_url" {
@@ -20,7 +28,6 @@ variable "slack_webhook_url" {
 
 # ---------------------------------------------------------------------------------------------------------------------
 # OPTIONAL PARAMETERS
-# These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
 
 variable "role_name" {
