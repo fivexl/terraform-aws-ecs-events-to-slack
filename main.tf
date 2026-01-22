@@ -42,10 +42,7 @@ resource "aws_cloudwatch_event_rule" "this" {
 
 resource "aws_ecr_repository" "lambda_repo" {
   name                 = "ecs-events-to-slack-repo"
-  
-  # REASON: UPDATED - Hardening best practice requires immutable tags to prevent 
-  # attackers or bugs from overwriting valid image versions with malicious code.
-  # image_tag_mutability = "MUTABLE"
+  # Hardening: Immutable tags prevent overwriting valid images with malicious code
   image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
@@ -61,26 +58,6 @@ resource "aws_cloudwatch_event_target" "this" {
   rule      = aws_cloudwatch_event_rule.this[each.key].name
 }
 
-# REASON FOR COMMENTING OUT: Docker build/push logic has been moved to GitHub Actions 
-# (.github/workflows/build_docker.yml) to run on 'Release'. This removes the dependency 
-# on the local machine's Docker daemon and credentials during 'terraform apply'.
-# resource "null_resource" "docker_build_push" {
-#   triggers = {
-#     # Re-build if these files change
-#     docker_file  = filemd5("${path.module}/functions/Dockerfile")
-#     requirements = filemd5("${path.module}/functions/requirements.txt")
-#     source_code  = filemd5("${path.module}/functions/slack_notifications.py")
-#   }
-
-#   provisioner "local-exec" {
-#     command = <<EOF
-#       aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${aws_ecr_repository.lambda_repo.repository_url}
-#       docker build --platform linux/amd64 -t ${aws_ecr_repository.lambda_repo.repository_url}:latest -f functions/Dockerfile functions/
-#       docker push ${aws_ecr_repository.lambda_repo.repository_url}:latest
-#     EOF
-#   }
-# }
-
 module "slack_notifications" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "7.0.0"
@@ -91,33 +68,15 @@ module "slack_notifications" {
   lambda_role   = var.lambda_role
   description   = "Receive events from EventBridge and send them to Slack"
 
-  # --- DOCKER UPDATES ---
   create_package = false
   package_type   = "Image"
-  
-  # REASON: UPDATED - Switched from 'latest' to specific version variable (var.image_version).
-  # This enforces manual versioning for production releases, preventing 'silent' updates
-  # and allowing for controlled rollbacks (Anton's Request).
-  # image_uri      = "${aws_ecr_repository.lambda_repo.repository_url}:latest"
+  # Use specific version from variable to enforce manual deployment gates
   image_uri      = "${aws_ecr_repository.lambda_repo.repository_url}:${var.image_version}"
-
-  # REASON: DEPRECATED - Handler, source_path, and runtime are defined in the Dockerfile 
-  # or irrelevant for Image package_type.
-  # handler       = "slack_notifications.lambda_handler"
-  # source_path   = "${path.module}/functions/slack_notifications.py"
-  # runtime       = "python3.10"
-  
-  # REASON: DEPRECATED - Package management is handled by Docker CI, not local Terraform.
-  # recreate_missing_package = var.recreate_missing_package
 
   timeout = 30
   publish = true
 
   memory_size = var.lambda_memory_size
-
-  # REASON FOR COMMENTING OUT: Since the image is now built in CI prior to deployment (on Release), 
-  # Terraform no longer needs to wait for a local null_resource to complete.
-  # depends_on = [null_resource.docker_build_push]
 
   allowed_triggers = {
     for rule, params in local.event_rules : rule => {
@@ -137,40 +96,26 @@ module "slack_notifications" {
   cloudwatch_logs_retention_in_days = var.cloudwatch_logs_retention_in_days
 
   attach_policy_json = (var.slack_webhook_url_source_type != "text")
-  policy_json = var.slack_webhook_url_source_type == "secretsmanager" ? jsonencode(
-    {
+  
+  policy_json = var.slack_webhook_url_source_type == "secretsmanager" ? jsonencode({
       "Version" : "2012-10-17",
       "Statement" : [
         {
           "Effect" : "Allow",
-          "Action" : [
-            "secretsmanager:GetSecretValue",
-          ],
-          "Resource" : [
-            "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url}*",
-          ]
+          "Action" : ["secretsmanager:GetSecretValue"],
+          "Resource" : ["arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url}*"]
         }
       ]
-    }
-    ) : var.slack_webhook_url_source_type == "ssm" ? jsonencode(
-    {
+    }) : var.slack_webhook_url_source_type == "ssm" ? jsonencode({
       "Version" : "2012-10-17",
       "Statement" : [
         {
           "Effect" : "Allow",
-          "Action" : [
-            "ssm:GetParameter",
-            "ssm:GetParameters",
-            "ssm:GetParametersByPath",
-          ],
-          "Resource" : [
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${var.slack_webhook_url}*",
-          ]
+          "Action" : ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"],
+          "Resource" : ["arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${var.slack_webhook_url}*"]
         }
       ]
-    }
-  ) : null
-
+    }) : null
 
   tags = var.tags
 }
