@@ -41,7 +41,7 @@ resource "aws_cloudwatch_event_rule" "this" {
 }
 
 resource "aws_ecr_repository" "lambda_repo" {
-  name                 = "ecs-events-to-slack-repo"
+  name = "ecs-events-to-slack-repo"
   # Hardening: Immutable tags prevent overwriting valid images with malicious code
   image_tag_mutability = "IMMUTABLE"
 
@@ -71,7 +71,7 @@ module "slack_notifications" {
   create_package = false
   package_type   = "Image"
   # Use specific version from variable to enforce manual deployment gates
-  image_uri      = "${aws_ecr_repository.lambda_repo.repository_url}:${var.image_version}"
+  image_uri = "${aws_ecr_repository.lambda_repo.repository_url}:${var.image_version}"
 
   recreate_missing_package = var.recreate_missing_package
 
@@ -98,26 +98,26 @@ module "slack_notifications" {
   cloudwatch_logs_retention_in_days = var.cloudwatch_logs_retention_in_days
 
   attach_policy_json = (var.slack_webhook_url_source_type != "text")
-  
+
   policy_json = var.slack_webhook_url_source_type == "secretsmanager" ? jsonencode({
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Effect" : "Allow",
-          "Action" : ["secretsmanager:GetSecretValue"],
-          "Resource" : ["arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url}*"]
-        }
-      ]
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : ["secretsmanager:GetSecretValue"],
+        "Resource" : ["arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url}*"]
+      }
+    ]
     }) : var.slack_webhook_url_source_type == "ssm" ? jsonencode({
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Effect" : "Allow",
-          "Action" : ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"],
-          "Resource" : ["arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${var.slack_webhook_url}*"]
-        }
-      ]
-    }) : null
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"],
+        "Resource" : ["arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${var.slack_webhook_url}*"]
+      }
+    ]
+  }) : null
 
   tags = var.tags
 }

@@ -42,9 +42,9 @@ resource "aws_iam_role_policy" "ecr_push_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "GetAuthorizationToken"
-        Effect = "Allow"
-        Action = "ecr:GetAuthorizationToken"
+        Sid      = "GetAuthorizationToken"
+        Effect   = "Allow"
+        Action   = "ecr:GetAuthorizationToken"
         Resource = "*"
       },
       {
