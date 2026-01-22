@@ -73,6 +73,8 @@ module "slack_notifications" {
   # Use specific version from variable to enforce manual deployment gates
   image_uri      = "${aws_ecr_repository.lambda_repo.repository_url}:${var.image_version}"
 
+  recreate_missing_package = var.recreate_missing_package
+
   timeout = 30
   publish = true
 
