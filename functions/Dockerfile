@@ -20,31 +20,33 @@ COPY . .
 RUN pyinstaller --onefile --name slack_notifier slack_notifications.py
 
 # Stage 2: Production Image
-# CHANGED: Switched to FivexL Secure Distroless (Debian 11)
+# CHANGED: Use public Google Distroless (Debian 12) instead of private FivexL image
 # REASON: Provides a solid set of preinstalled libs (glibc) while remaining 
 # shell-less and secure. Distroless images are more stable than scratch for Python binaries.
-FROM ghcr.io/fivexl/secure-container-image:base-python3-distroless-debian-11
+
+FROM gcr.io/distroless/python3-debian12
 
 WORKDIR /var/task
 
-# Copy binary from builder
-COPY --from=builder /app/dist/slack_notifier /usr/bin/slack_notifier
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# Copy dependencies from builder
+# Note: We copy to the standard python path for Distroless
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy your code
 COPY . .
-# CHANGED: Adding lprobe
-# REASON: Shell-less distroless images require binary-based health checks 
-# because standard tools like 'curl' or 'sh' are absent (FivexL Hardening Part 1).
+
+# Copy lprobe for healthchecks (If this also fails, we will remove it)
 COPY --from=ghcr.io/fivexl/lprobe:0.0.7 /lprobe /usr/bin/lprobe
 
-# Lambda RIC requires the PYTHONPATH to find your packages
-ENV PYTHONPATH=/usr/local/lib/python3.11/site-packages
+# Set PYTHONPATH so Python can find the installed packages
+ENV PYTHONPATH=/usr/lib/python3.11/site-packages
 
-# USER: Distroless images typically use a non-root user (e.g., 65532) by default.
-# We inherit this security benefit.
-
+# HEALTHCHECK is ignored by Lambda but useful for local testing
 HEALTHCHECK --interval=1m --timeout=3s \
   CMD ["/usr/bin/lprobe", "-mode=http", "-port=8080"]
 
-ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
+# CHANGED: Python path in Distroless is /usr/bin/python3
+ENTRYPOINT [ "/usr/bin/python3", "-m", "awslambdaric" ]
+
 CMD [ "slack_notifications.lambda_handler" ]
