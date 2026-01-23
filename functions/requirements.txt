@@ -28,3 +28,4 @@ urllib3==1.26.19
     # via
     #   terraform-aws-ecs-events-to-slack (pyproject.toml)
     #   botocore
+awslambdaric==2.0.7

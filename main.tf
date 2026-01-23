@@ -41,7 +41,7 @@ resource "aws_cloudwatch_event_rule" "this" {
 }
 
 resource "aws_ecr_repository" "lambda_repo" {
-  name = "ecs-events-to-slack-repo"
+  name = var.ecr_repo_name
   # Hardening: Immutable tags prevent overwriting valid images with malicious code
   image_tag_mutability = "IMMUTABLE"
 
