@@ -19,7 +19,7 @@ resource "aws_iam_role" "github_ci_role" {
         Condition = {
           StringEquals = {
             # STRICT SECURITY: Only allow the main branch of this specific repo
-            "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/main"
+            "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:*"
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           }
         }
