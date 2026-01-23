@@ -60,7 +60,7 @@ resource "aws_cloudwatch_event_target" "this" {
 
 module "slack_notifications" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.0.0"
+  version = "8.2.0"
 
   function_name = var.name
   role_name     = var.role_name
@@ -79,6 +79,7 @@ module "slack_notifications" {
   publish = true
 
   memory_size = var.lambda_memory_size
+  ephemeral_storage_size = 512
 
   allowed_triggers = {
     for rule, params in local.event_rules : rule => {
