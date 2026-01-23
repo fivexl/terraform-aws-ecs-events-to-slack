@@ -44,13 +44,13 @@ resource "aws_iam_role_policy" "ecr_push_policy" {
         Sid    = "AllowPushToSpecificRepo"
         Effect = "Allow"
         Action = [
+          "ecr:BatchGetImage",             # <--- ADD THIS LINE
           "ecr:BatchCheckLayerAvailability",
           "ecr:CompleteLayerUpload",
           "ecr:InitiateLayerUpload",
           "ecr:PutImage",
           "ecr:UploadLayerPart"
         ]
-        # Restrict permissions strictly to the repo created in main.tf
         Resource = aws_ecr_repository.lambda_repo.arn
       }
     ]
