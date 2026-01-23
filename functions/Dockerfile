@@ -47,4 +47,4 @@ HEALTHCHECK --interval=1m --timeout=3s \
   CMD ["/usr/bin/lprobe", "-mode=http", "-port=8080"]
 
 ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
-CMD [ "slack_notifications.handler" ]
+CMD [ "slack_notifications.lambda_handler" ]
