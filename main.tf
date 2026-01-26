@@ -69,7 +69,9 @@ module "slack_notifications" {
 
   create_package = false
   package_type   = "Image"
+  
   image_uri = "${aws_ecr_repository.lambda_repo.repository_url}:${var.image_version}"
+  
 
   recreate_missing_package = var.recreate_missing_package
 
@@ -78,7 +80,7 @@ module "slack_notifications" {
 
   memory_size = var.lambda_memory_size
   ephemeral_storage_size = 512
-
+  
   allowed_triggers = {
     for rule, params in local.event_rules : rule => {
       principal    = "events.amazonaws.com"
