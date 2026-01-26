@@ -7,9 +7,6 @@ variable "name" {
   type        = string
 }
 
-# REASON: UPDATED - Manual versioning is now required for production releases.
-# This prevents 'latest' tag overwrites and provides a deployment gate.
-
 variable "image_version" {
   description = "The ECR image tag to deploy (e.g., v1.0.0)"
   type        = string
