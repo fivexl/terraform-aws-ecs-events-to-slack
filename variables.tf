@@ -133,6 +133,7 @@ variable "lambda_memory_size" {
 variable "github_repo" {
   description = "The GitHub repository in format 'org/repo'"
   type        = string
+  default     = "simon-tingle/terraform-aws-ecs-events-to-slack"
 }
 
 variable "recreate_missing_package" {
