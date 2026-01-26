@@ -2,14 +2,23 @@
 FROM python:3.11-slim AS builder
 WORKDIR /app
 
+# Create the User 2323 Explicitly
+RUN groupadd -g 2323 appuser && \
+    useradd -r -u 2323 -g appuser appuser
+
 # Install only necessary runtime dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
 
 # Stage 2: Production (Distroless)
 FROM gcr.io/distroless/python3-debian12
 
 WORKDIR /var/task
+
+# Copy User Definitions
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
 
 # 1. Copy libraries with correct ownership for UID 2323
 COPY --from=builder --chown=2323:2323 /usr/local/lib/python3.11/site-packages /usr/lib/python3.11/site-packages
