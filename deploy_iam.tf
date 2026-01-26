@@ -44,7 +44,7 @@ resource "aws_iam_role_policy" "ecr_push_policy" {
         Sid    = "AllowPushToSpecificRepo"
         Effect = "Allow"
         Action = [
-          "ecr:BatchGetImage",             # <--- ADD THIS LINE
+          "ecr:BatchGetImage",
           "ecr:BatchCheckLayerAvailability",
           "ecr:CompleteLayerUpload",
           "ecr:InitiateLayerUpload",
