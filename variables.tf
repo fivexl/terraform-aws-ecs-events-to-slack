@@ -13,7 +13,7 @@ variable "name" {
 variable "image_version" {
   description = "The ECR image tag to deploy (e.g., v1.0.0)"
   type        = string
-  default     = "v0.1.0"
+  default     = "v0.1.1"
 }
 
 variable "slack_webhook_url" {

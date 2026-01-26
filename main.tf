@@ -42,7 +42,6 @@ resource "aws_cloudwatch_event_rule" "this" {
 
 resource "aws_ecr_repository" "lambda_repo" {
   name = var.ecr_repo_name
-  # Hardening: Immutable tags prevent overwriting valid images with malicious code
   image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
@@ -70,7 +69,6 @@ module "slack_notifications" {
 
   create_package = false
   package_type   = "Image"
-  # Use specific version from variable to enforce manual deployment gates
   image_uri = "${aws_ecr_repository.lambda_repo.repository_url}:${var.image_version}"
 
   recreate_missing_package = var.recreate_missing_package
