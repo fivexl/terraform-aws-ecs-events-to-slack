@@ -36,8 +36,6 @@ crash.log
 # are not checked in
 override.tf
 override.tf.json
-*_override.tf
-*_override.tf.json
 
 # Ignore CLI configuration files
 .terraformrc
@@ -45,7 +43,6 @@ terraform.rc
 
 # Lambda directories
 builds/
-__pycache__/
 
 # Personal Project Tracking & Notes
 *.md
@@ -58,5 +55,4 @@ __pycache__/
 AGENTS.md
 
 # IDE and Environment
-.python-version
 .env
