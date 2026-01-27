@@ -120,13 +120,6 @@ variable "lambda_memory_size" {
   type        = number
   default     = 256
 }
-
-variable "github_repo" {
-  description = "The GitHub repository in format 'org/repo'"
-  type        = string
-  default     = "simon-tingle/terraform-aws-ecs-events-to-slack"
-}
-
 variable "recreate_missing_package" {
   description = "Whether to recreate missing Lambda package"
   type        = bool
