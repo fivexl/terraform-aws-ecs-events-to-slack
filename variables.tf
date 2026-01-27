@@ -72,7 +72,7 @@ variable "ecs_task_state_event_rule_detail" {
   type        = any
   default = {
     lastStatus    = ["STOPPED"]
-    stoppedReason = [{ "anything-but" : { "prefix" : "Scaling activity initiated by (deployment ecs-svc/" } }] 
+    stoppedReason = [{ "anything-but" : { "prefix" : "Scaling activity initiated by (deployment ecs-svc/" } }]
   }
 }
 
