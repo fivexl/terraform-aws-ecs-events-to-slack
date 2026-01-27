@@ -40,15 +40,6 @@ resource "aws_cloudwatch_event_rule" "this" {
   tags = var.tags
 }
 
-resource "aws_ecr_repository" "lambda_repo" {
-  name = var.ecr_repo_name
-  image_tag_mutability = "IMMUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
-
 resource "aws_cloudwatch_event_target" "this" {
   for_each = local.event_rules
 
@@ -67,11 +58,10 @@ module "slack_notifications" {
   lambda_role   = var.lambda_role
   description   = "Receive events from EventBridge and send them to Slack"
 
-  create_package = false
-  package_type   = "Image"
-  
-  image_uri = "${aws_ecr_repository.lambda_repo.repository_url}:${var.image_version}"
-  
+  create_package = true
+  source_path    = "${path.module}/functions"
+  handler        = "slack_notifications.lambda_handler"
+  runtime        = "python3.11"
 
   recreate_missing_package = var.recreate_missing_package
 
@@ -79,8 +69,7 @@ module "slack_notifications" {
   publish = true
 
   memory_size = var.lambda_memory_size
-  ephemeral_storage_size = 512
-  
+
   allowed_triggers = {
     for rule, params in local.event_rules : rule => {
       principal    = "events.amazonaws.com"
