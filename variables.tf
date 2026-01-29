@@ -125,3 +125,7 @@ variable "recreate_missing_package" {
   type        = bool
   default     = true
 }
+variable "github_repo" {
+  description = "The GitHub repository (e.g., 'owner/repo') allowed to push images."
+  type        = string
+}
