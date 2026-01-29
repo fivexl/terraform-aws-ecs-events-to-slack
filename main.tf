@@ -112,8 +112,6 @@ module "slack_notifications" {
   tags = var.tags
 }
 
-resource "aws_ecr_repository" "repo" {
-  name                 = "${var.name}-ecr-repo"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {

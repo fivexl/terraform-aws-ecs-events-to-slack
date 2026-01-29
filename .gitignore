@@ -21,7 +21,6 @@ terraform.tfvars
 __pycache__/
 *.pyc
 
-.DS_Store
 
 # Crash log files
 crash.log
@@ -48,7 +47,6 @@ builds/
 
 # AI/Agent Steering
 .kiro/
-AGENTS.md
 
 # IDE and Environment
 .env
