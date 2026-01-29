@@ -45,10 +45,10 @@ terraform.rc
 builds/
 
 # Personal Project Tracking & Notes
-*.md
-!README.md
-!CONTRIBUTING.md
-!functions/README.md
+# *.md
+# !README.md
+# !CONTRIBUTING.md
+# !functions/README.md
 
 # AI/Agent Steering
 .kiro/
