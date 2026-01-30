@@ -1,6 +1,3 @@
-# ---------------------------------------------------------------------------------------------------------------------
-# REQUIRED PARAMETERS
-# ---------------------------------------------------------------------------------------------------------------------
 
 variable "name" {
   description = "The string which will be used for the name of AWS Lambda function and other created resources"
@@ -17,9 +14,6 @@ variable "slack_webhook_url" {
 }
 
 
-# ---------------------------------------------------------------------------------------------------------------------
-# OPTIONAL PARAMETERS
-# ---------------------------------------------------------------------------------------------------------------------
 
 variable "role_name" {
   description = "The string which will be used for the name of Lambda IAM role"
@@ -120,6 +114,7 @@ variable "lambda_memory_size" {
   type        = number
   default     = 256
 }
+
 variable "recreate_missing_package" {
   description = "Whether to recreate missing Lambda package"
   type        = bool
