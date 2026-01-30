@@ -43,10 +43,7 @@ terraform.rc
 # Lambda directories
 builds/
 
-# Personal Project Tracking & Notes
 
-# AI/Agent Steering
-.kiro/
 
 # IDE and Environment
 .env
