@@ -1,36 +1,31 @@
-# Local .terraform directories
+# Terraform
 **/.terraform/*
 .terraform.lock.hcl
-
-# .tfstate files
 *.tfstate
 *.tfstate.*
 *.tfplan
 
-# Variables and Secrets
+# Secrets and Variables
 *.tfvars
 *.tfvars.json
 .env
 credentials.json
 
-# Python and UV
+# Python / uv
 .venv/
 __pycache__/
 *.pyc
 .ruff_cache/
 .pytest_cache/
 
-# Crash log files
-crash.log
-
-# Overrides
-override.tf
-override.tf.json
-
-# CLI configuration files
-.terraformrc
-terraform.rc
-
-# Lambda and Build artifacts
+# Build and Lambda
 builds/
 dist/
+node_modules/
+
+# Logs and Overrides
+crash.log
+override.tf
+override.tf.json
+.terraformrc
+terraform.rc
