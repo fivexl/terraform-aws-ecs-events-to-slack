@@ -1,48 +1,23 @@
-name: PR Review
+name: Update review branch
 
 on:
-  pull_request:
-    paths:
-      - 'functions/**'
-      - '.github/workflows/**'
-      - '**.tf'
+  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  validate:
-    name: Lint and Test
+  review:
+    name: Review
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Format Check
-        run: terraform fmt -check
-
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          cd functions
-          uv sync
-
-      - name: Run Unit Tests
-        run: |
-          cd functions
-          uv run pytest
+    - name: Update review branch
+      id: update-review
+      run: |
+        git push origin main:review
