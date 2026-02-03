@@ -1,1 +1,1 @@
-.kiro/steering/design.md
+.kiro/steering/steering.md
