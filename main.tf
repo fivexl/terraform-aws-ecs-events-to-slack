@@ -89,26 +89,26 @@ module "slack_notifications" {
 
   attach_policy_json = (var.slack_webhook_url_source_type != "text")
 
-  policy_json = var.slack_webhook_url_source_type == "secretsmanager" ? jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : ["secretsmanager:GetSecretValue"],
-        "Resource" : ["arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url}*"]
-      }
-    ]
-    }) : var.slack_webhook_url_source_type == "ssm" ? jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"],
-        "Resource" : ["arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${var.slack_webhook_url}*"]
-      }
-    ]
-  }) : null
+  policy_json = (
+    var.slack_webhook_url_source_type == "secretsmanager" ? data.aws_iam_policy_document.secretsmanager[0].json :
+    var.slack_webhook_url_source_type == "ssm" ? data.aws_iam_policy_document.ssm[0].json : null
+  )
 
   tags = var.tags
 }
 
+data "aws_iam_policy_document" "secretsmanager" {
+  count = var.slack_webhook_url_source_type == "secretsmanager" ? 1 : 0
+  statement {
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = ["arn:aws:secretsmanager:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url}*"]
+  }
+}
+
+data "aws_iam_policy_document" "ssm" {
+  count = var.slack_webhook_url_source_type == "ssm" ? 1 : 0
+  statement {
+    actions   = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"]
+    resources = ["arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${var.slack_webhook_url}*"]
+  }
+}
