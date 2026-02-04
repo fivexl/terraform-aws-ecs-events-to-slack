@@ -36,3 +36,4 @@ CMD [ "slack_notifications.lambda_handler" ]
 # COPY requirements.txt .
 # RUN pip install --no-cache-dir -r requirements.txt
 # COPY --from=builder --chown=2323:2323 /usr/local/lib/python3.11/site-packages /usr/lib/python3.11/site-packages
+HEALTHCHECK --interval=1m --timeout=3s CMD ["/usr/bin/lprobe", "-mode=http", "-port=8080"]
