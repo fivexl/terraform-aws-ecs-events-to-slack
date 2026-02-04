@@ -1,0 +1,40 @@
+version: 2
+updates:
+  # 1. Cover the Root Module
+  - package-ecosystem: "terraform"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+
+  # 2. Cover Example: Complex
+  - package-ecosystem: "terraform"
+    directory: "/examples/complex"
+    schedule:
+      interval: "weekly"
+  
+  # 3. Cover Example: Simple
+  - package-ecosystem: "terraform"
+    directory: "/examples/simple"
+    schedule:
+      interval: "weekly"
+
+  # 4. Cover Example: Simple SSM Parameter
+  - package-ecosystem: "terraform"
+    directory: "/examples/simple-ssm_parameter"
+    schedule:
+      interval: "weekly"
+
+  # 5. Cover Example: Simple Secrets Manager
+  - package-ecosystem: "terraform"
+    directory: "/examples/simple-secretsmanager"
+    schedule:
+      interval: "weekly"
+
+  # 6. Cover Example: Container Instance State
+  - package-ecosystem: "terraform"
+    directory: "/examples/container-instance-state"
+    schedule:
+      interval: "weekly"

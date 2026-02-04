@@ -50,22 +50,25 @@ resource "aws_cloudwatch_event_target" "this" {
 
 module "slack_notifications" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.0.0"
+  version = "8.2.0"
 
   function_name = var.name
   role_name     = var.role_name
   create_role   = var.create_role
   lambda_role   = var.lambda_role
   description   = "Receive events from EventBridge and send them to Slack"
-  handler       = "slack_notifications.lambda_handler"
-  source_path   = "${path.module}/functions/slack_notifications.py"
-  runtime       = "python3.10"
-  timeout       = 30
-  publish       = true
 
-  memory_size = var.lambda_memory_size
+  create_package = true
+  source_path    = "${path.module}/functions"
+  handler        = "slack_notifications.lambda_handler"
+  runtime        = "python3.11"
 
   recreate_missing_package = var.recreate_missing_package
+
+  timeout = 30
+  publish = true
+
+  memory_size = var.lambda_memory_size
 
   allowed_triggers = {
     for rule, params in local.event_rules : rule => {
@@ -85,40 +88,27 @@ module "slack_notifications" {
   cloudwatch_logs_retention_in_days = var.cloudwatch_logs_retention_in_days
 
   attach_policy_json = (var.slack_webhook_url_source_type != "text")
-  policy_json = var.slack_webhook_url_source_type == "secretsmanager" ? jsonencode(
-    {
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Effect" : "Allow",
-          "Action" : [
-            "secretsmanager:GetSecretValue",
-          ],
-          "Resource" : [
-            "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url}*",
-          ]
-        }
-      ]
-    }
-    ) : var.slack_webhook_url_source_type == "ssm" ? jsonencode(
-    {
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Effect" : "Allow",
-          "Action" : [
-            "ssm:GetParameter",
-            "ssm:GetParameters",
-            "ssm:GetParametersByPath",
-          ],
-          "Resource" : [
-            "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${var.slack_webhook_url}*",
-          ]
-        }
-      ]
-    }
-  ) : null
 
+  policy_json = (
+    var.slack_webhook_url_source_type == "secretsmanager" ? data.aws_iam_policy_document.secretsmanager[0].json :
+    var.slack_webhook_url_source_type == "ssm" ? data.aws_iam_policy_document.ssm[0].json : null
+  )
 
   tags = var.tags
+}
+
+data "aws_iam_policy_document" "secretsmanager" {
+  count = var.slack_webhook_url_source_type == "secretsmanager" ? 1 : 0
+  statement {
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = ["arn:aws:secretsmanager:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:secret:${var.slack_webhook_url}*"]
+  }
+}
+
+data "aws_iam_policy_document" "ssm" {
+  count = var.slack_webhook_url_source_type == "ssm" ? 1 : 0
+  statement {
+    actions   = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"]
+    resources = ["arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter${var.slack_webhook_url}*"]
+  }
 }
