@@ -1,10 +1,11 @@
 name: CI
 
 on:
+  push:
+    tags: [ v* ]
+    branches: [ main ]
   pull_request:
-    paths:
-      - 'functions/**'
-      - '**.tf'
+    branches: [ main ]
 
 permissions:
   contents: read
