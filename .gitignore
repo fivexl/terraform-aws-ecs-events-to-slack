@@ -32,3 +32,10 @@ terraform.rc
 # Lambda directories
 builds/
 __pycache__/
+
+# Modernization: Python & Environment
+.venv/
+.python-version
+uv.lock
+.ruff_cache/
+.DS_Store
