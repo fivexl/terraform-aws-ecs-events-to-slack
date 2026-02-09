@@ -1,18 +1,34 @@
-*.tfvars
-# Terraform
+# Terraform Standards (Aligned with FivexL SSO)
 **/.terraform/*
-.terraform.lock.hcl
+
+# .tfstate files
 *.tfstate
 *.tfstate.*
 
-# Python / uv
+# locks (Note: If SSO ignores this, we must too)
+.terraform.lock.hcl
+
+# CLI Configuration Files (Global or Local)
+.terraformrc
+terraform.rc
+terraforarc
+
+# Crash log files
+crash.log
+
+# Exclude plan files (Safety Critical)
+*.tfplan
+
+# Ignore override files (Safety Critical - prevents local configs hitting prod)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Python / uv (Keep your modern updates)
 .venv/
 __pycache__/
 *.py[cod]
 *.class
 uv.lock
 .python-version
-
-# Logs
-crash.log
-*.log
