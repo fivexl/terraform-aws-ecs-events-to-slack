@@ -3,6 +3,9 @@ name: Update review branch
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   review:
     name: Review
@@ -10,7 +13,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
