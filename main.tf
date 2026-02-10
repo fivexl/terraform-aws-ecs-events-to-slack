@@ -61,7 +61,7 @@ module "slack_notifications" {
   create_package = true
   source_path    = "${path.module}/functions"
   handler        = "slack_notifications.lambda_handler"
-  runtime        = "python3.11"
+  runtime        = "python3.10"
 
   recreate_missing_package = var.recreate_missing_package
 
