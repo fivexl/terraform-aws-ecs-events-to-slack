@@ -45,3 +45,5 @@ __pycache__/
 *.py[cod]
 *.class
 uv.lock
+
+**/.DS_Store
