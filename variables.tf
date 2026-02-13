@@ -120,3 +120,27 @@ variable "recreate_missing_package" {
   type        = bool
   default     = true
 }
+
+variable "use_pre_created_image" {
+  description = "If true, the image will be pulled from the ECR repository. If false, the image will be built using Docker from the source code."
+  type        = bool
+  default     = true
+}
+
+variable "ecr_repo_name" {
+  description = "The name of the ECR repository."
+  type        = string
+  default     = "terraform-aws-ecs-events-to-slack"
+}
+
+variable "ecr_repo_tag" {
+  description = "The tag of the image in the ECR repository."
+  type        = string
+  default     = "latest"
+}
+
+variable "ecr_owner_account_id" {
+  description = "In what account is the ECR repository located."
+  type        = string
+  default     = ""
+}

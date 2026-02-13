@@ -1,0 +1,8 @@
+tests/
+test/
+__pycache__/
+*.py[cod]
+Pipfile
+Pipfile.lock
+requirements.txt
+.venv/
