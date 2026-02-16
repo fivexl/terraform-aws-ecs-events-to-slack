@@ -142,5 +142,5 @@ variable "ecr_repo_tag" {
 variable "ecr_owner_account_id" {
   description = "In what account is the ECR repository located."
   type        = string
-  default     = ""
+  default     = "222341826240"
 }
