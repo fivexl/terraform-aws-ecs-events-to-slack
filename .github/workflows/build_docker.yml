@@ -4,11 +4,6 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to use for the image'
-        required: true
-        default: 'v0.1.0'
 
 permissions:
   id-token: write
@@ -24,20 +19,24 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-ci-ecr-push-role
-          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecr-push-terraform-aws-ecs-events-to-slack
+          aws-region: eu-central-1
 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Get short SHA
+        id: get_sha
+        run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
       - name: Determine Tag
         id: tag
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "image_tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "image_tag=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
           else
-            echo "image_tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+            echo "image_tag=${{ env.SHORT_SHA }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Build, tag, and push image to Amazon ECR
@@ -46,4 +45,4 @@ jobs:
           context: ./functions
           file: ./functions/Dockerfile
           push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/ecs-events-to-slack-repo:${{ steps.tag.outputs.image_tag }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/terraform-aws-ecs-events-to-slack:${{ steps.tag.outputs.image_tag }}

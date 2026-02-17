@@ -60,6 +60,7 @@ module "slack_notifications" {
 
   package_type   = var.use_pre_created_image ? "Image" : "Zip"
   create_package = var.use_pre_created_image ? false : true
+  build_in_docker = var.use_pre_created_image ? false : true
   image_uri      = var.use_pre_created_image ? "${var.ecr_owner_account_id}.dkr.ecr.${data.aws_region.current.id}.amazonaws.com/${var.ecr_repo_name}:${var.ecr_repo_tag}" : null
   source_path    = var.use_pre_created_image ? null : "${path.module}/functions"
   handler        = var.use_pre_created_image ? null : "slack_notifications.lambda_handler"
