@@ -44,4 +44,3 @@ builds/
 __pycache__/
 *.py[cod]
 *.class
-uv.lock
