@@ -130,7 +130,7 @@ variable "use_pre_created_image" {
 variable "ecr_repo_name" {
   description = "The name of the ECR repository."
   type        = string
-  default = "terraform-aws-ecs-events-to-slack"
+  default     = "terraform-aws-ecs-events-to-slack"
 }
 
 variable "ecr_repo_tag" {
@@ -142,5 +142,5 @@ variable "ecr_repo_tag" {
 variable "ecr_owner_account_id" {
   description = "In what account is the ECR repository located."
   type        = string
-  default = "222341826240"
+  default     = "222341826240"
 }
