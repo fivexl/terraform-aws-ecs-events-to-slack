@@ -31,8 +31,37 @@ You can find more examples in the [`examples/`](./examples/) directory
 
 ## AWS Terraform provier versions
 
-* version 0.1.2 is the last version that works with both Terraform AWS provider v3 and v4. There are no plans to update 0.1.X branch.
-* all versions later (0.2.0 and above) require Terraform AWS provider v4 as a baseline
+* versions 0.2.0 and later require Terraform AWS provider v4 as a baseline.
+* versions 0.3.0 and later require AWS Terraform provider ~> 6.0 and Terraform >= 1.10.
+
+# Possibility of using SSM/Secrets Manager to pass Slack credentials into Lambda
+- This module supports passing Slack credentials into Lambda using SSM/Secrets Manager.
+- You can find example in the example/ssm or example/secrets-manager directories.
+## Credential Sources
+
+This module supports three ways to pass the Slack webhook URL:
+
+**Plain Text** (Development):
+```hcl
+slack_webhook_url = "https://hooks.slack.com/..." ```
+
+[See:] ./examples/simple/main.tf
+
+SSM Parameter (production):
+
+slack_webhook_url              = "/path/to/parameter"
+slack_webhook_url_source_type  = "ssm"
+
+[See:] ./examples/simple-ssm_parameter
+
+Secrets Manager (production + sensitive data):
+
+slack_webhook_url              = "secret-name"
+slack_webhook_url_source_type  = "secretsmanager"
+
+[See:] ./examples/simple-secretsmanager
+
+For details: [texAWS Parameter Storet](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) | [Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
