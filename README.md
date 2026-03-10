@@ -42,7 +42,7 @@ You can find more examples in the [`examples/`](./examples/) directory
 
 This module supports three ways to pass the Slack webhook URL:
 
-**Plain Text** (development):
+**Simple Example** (development):
 ```hcl
 slack_webhook_url = "https://hooks.slack.com/..."
 ```
