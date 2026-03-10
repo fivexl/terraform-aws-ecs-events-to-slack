@@ -61,7 +61,7 @@ slack_webhook_url_source_type  = "secretsmanager"
 
 [See:] ./examples/simple-secretsmanager
 
-For details: [texAWS Parameter Storet](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) | [Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/)
+For details: [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) | [Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
