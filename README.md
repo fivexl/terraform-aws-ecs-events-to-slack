@@ -29,7 +29,7 @@ You can find more examples in the [`examples/`](./examples/) directory
 - [Handling events with Lambda](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_cwet_handling.html)
 - [EventBridge Patterns](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-patterns.html)
 
-## AWS Terraform provier versions
+## AWS Terraform provdier versions
 
 * versions 0.2.0 and later require Terraform AWS provider v4 as a baseline.
 * versions 0.3.0 and later require AWS Terraform provider ~> 6.0 and Terraform >= 1.10.
@@ -37,9 +37,6 @@ You can find more examples in the [`examples/`](./examples/) directory
 # Possibility of using SSM/Secrets Manager to pass Slack credentials into Lambda
 - This module supports passing Slack credentials into Lambda using SSM/Secrets Manager.
 - You can find example in the example/ssm or example/secrets-manager directories.
-## Credential Sources
-
-This module supports three ways to pass the Slack webhook URL:
 
 ## Credential Sources
 
