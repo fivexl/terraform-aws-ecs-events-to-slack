@@ -41,25 +41,29 @@ You can find more examples in the [`examples/`](./examples/) directory
 
 This module supports three ways to pass the Slack webhook URL:
 
-**Plain Text** (Development):
+## Credential Sources
+
+This module supports three ways to pass the Slack webhook URL:
+
+**Plain Text** (development):
 ```hcl
-slack_webhook_url = "https://hooks.slack.com/..." ```
+slack_webhook_url = "https://hooks.slack.com/..."
+```
+See: [examples/simple](./examples/simple/main.tf)
 
-[See:] ./examples/simple/main.tf
-
-SSM Parameter (production):
-
+**SSM Parameter** (production):
+```hcl
 slack_webhook_url              = "/path/to/parameter"
 slack_webhook_url_source_type  = "ssm"
+```
+See: [examples/simple-ssm_parameter](./examples/simple-ssm_parameter/main.tf)
 
-[See:] ./examples/simple-ssm_parameter
-
-Secrets Manager (production + sensitive data):
-
+**Secrets Manager** (production + sensitive data):
+```hcl
 slack_webhook_url              = "secret-name"
 slack_webhook_url_source_type  = "secretsmanager"
-
-[See:] ./examples/simple-secretsmanager
+```
+See: [examples/simple-secretsmanager](./examples/simple-secretsmanager/main.tf)
 
 For details: [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) | [Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/)
 
