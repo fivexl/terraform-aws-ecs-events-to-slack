@@ -11,7 +11,7 @@ jobs:
   python-job:
     uses: fivexl/github-reusable-workflows/.github/workflows/python-job.yml@main
     with:
-      python-version: "3.10"
+      python-version: "3.14"
       aws-default-region: "eu-central-1"
       working-directory: "functions"
       pytest-continue-on-error: true
@@ -19,5 +19,5 @@ jobs:
   terraform-job:
     uses: fivexl/github-reusable-workflows/.github/workflows/terraform-job.yml@main
     with:
-      terraform-version: "1.5.0"
+      terraform-version: "1.10+"
       aws-default-region: "eu-central-1"
