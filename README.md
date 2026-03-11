@@ -24,12 +24,76 @@ module "ecs_to_slack" {
 ```
 You can find more examples in the [`examples/`](./examples/) directory
 
+## Securing Slack Webhook URLs
+
+Instead of passing the Slack webhook URL as plain text, you can securely store it in **AWS Secrets Manager** or **AWS Systems Manager Parameter Store**.
+
+### Using AWS Secrets Manager
+
+Store your Slack webhook URL as a secret in AWS Secrets Manager:
+
+```hcl
+module "ecs_to_slack" {
+  source                        = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
+  name                          = "ecs-to-slack"
+  slack_webhook_url             = "slack-webhook-secret"  # Secrets Manager secret name
+  slack_webhook_url_source_type = "secretsmanager"
+}
+```
+
+**Prerequisites:**
+- Create a secret in AWS Secrets Manager containing your Slack webhook URL
+- The Lambda function's IAM role must have `secretsmanager:GetSecretValue` permission for that secret
+
+See: [`examples/simple-secretsmanager`](./examples/simple-secretsmanager/) for a complete example.
+
+### Using AWS Systems Manager Parameter Store
+
+Store your Slack webhook URL as a parameter in SSM Parameter Store:
+
+```hcl
+module "ecs_to_slack" {
+  source                        = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
+  name                          = "ecs-to-slack"
+  slack_webhook_url             = "/myapp/slack-webhook"  # SSM parameter path (must include leading /)
+  slack_webhook_url_source_type = "ssm"
+}
+```
+
+**Prerequisites:**
+- Create a parameter in AWS Systems Manager Parameter Store with your Slack webhook URL
+- The Lambda function's IAM role must have `ssm:GetParameter` permission for that parameter path
+
+See: [`examples/simple-ssm`](./examples/simple-ssm/) for a complete example.
+
+### IAM Permissions
+
+The module automatically creates IAM policies for accessing both Secrets Manager and Parameter Store. Ensure your Lambda execution role has:
+
+**For Secrets Manager:**
+```json
+{
+  "Effect": "Allow",
+  "Action": ["secretsmanager:GetSecretValue"],
+  "Resource": "arn:aws:secretsmanager:REGION:ACCOUNT:secret:SECRET-NAME"
+}
+```
+
+**For Parameter Store:**
+```json
+{
+  "Effect": "Allow",
+  "Action": ["ssm:GetParameter"],
+  "Resource": "arn:aws:ssm:REGION:ACCOUNT:parameter/parameter-path"
+}
+```
+
 ## Info
 - [Amazon ECS events](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_cwe_events.html)
 - [Handling events with Lambda](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_cwet_handling.html)
 - [EventBridge Patterns](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-patterns.html)
 
-## AWS Terraform provier versions
+## AWS Terraform provider versions
 
 * version 0.1.2 is the last version that works with both Terraform AWS provider v3 and v4. There are no plans to update 0.1.X branch.
 * all versions later (0.2.0 and above) require Terraform AWS provider v4 as a baseline
