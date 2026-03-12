@@ -43,7 +43,6 @@ module "ecs_to_slack" {
 
 **Prerequisites:**
 - Create a secret in AWS Secrets Manager containing your Slack webhook URL
-- The Lambda function's IAM role must have `secretsmanager:GetSecretValue` permission for that secret
 
 See: [`examples/simple-secretsmanager`](./examples/simple-secretsmanager/) for a complete example.
 
@@ -62,31 +61,8 @@ module "ecs_to_slack" {
 
 **Prerequisites:**
 - Create a parameter in AWS Systems Manager Parameter Store with your Slack webhook URL
-- The Lambda function's IAM role must have `ssm:GetParameter` permission for that parameter path
 
 See: [`examples/simple-ssm`](./examples/simple-ssm/) for a complete example.
-
-### IAM Permissions
-
-The module automatically creates IAM policies for accessing both Secrets Manager and Parameter Store. Ensure your Lambda execution role has:
-
-**For Secrets Manager:**
-```json
-{
-  "Effect": "Allow",
-  "Action": ["secretsmanager:GetSecretValue"],
-  "Resource": "arn:aws:secretsmanager:REGION:ACCOUNT:secret:SECRET-NAME"
-}
-```
-
-**For Parameter Store:**
-```json
-{
-  "Effect": "Allow",
-  "Action": ["ssm:GetParameter"],
-  "Resource": "arn:aws:ssm:REGION:ACCOUNT:parameter/parameter-path"
-}
-```
 
 ## Info
 - [Amazon ECS events](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_cwe_events.html)
