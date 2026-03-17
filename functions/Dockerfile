@@ -1,7 +1,7 @@
 FROM ghcr.io/astral-sh/uv:0.9.5 AS uv
 
 # First, bundle the dependencies into the task root
-FROM public.ecr.aws/lambda/python:3.10 AS builder
+FROM public.ecr.aws/lambda/python:3.14 AS builder
 
 # Enable bytecode compilation for better cold-start performance
 ENV UV_COMPILE_BYTECODE=1
@@ -23,7 +23,7 @@ RUN --mount=from=uv,source=/uv,target=/bin/uv \
     uv export --frozen --no-emit-workspace --no-dev --no-editable -o requirements.txt && \
     uv pip install --python-platform linux --target "${LAMBDA_TASK_ROOT}" -r requirements.txt
 
-FROM public.ecr.aws/lambda/python:3.10
+FROM public.ecr.aws/lambda/python3.14
 
 # Copy the runtime dependencies from the builder stage with proper ownership
 COPY --from=builder --chown=1000:1000 ${LAMBDA_TASK_ROOT} ${LAMBDA_TASK_ROOT}

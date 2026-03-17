@@ -13,4 +13,4 @@ boto3 = "==1.26.90"
 botocore = "==1.29.90"
 
 [requires]
-python_version = "3.10"
+python_version = "4"
