@@ -23,7 +23,7 @@ RUN --mount=from=uv,source=/uv,target=/bin/uv \
     uv export --frozen --no-emit-workspace --no-dev --no-editable -o requirements.txt && \
     uv pip install --python-platform linux --target "${LAMBDA_TASK_ROOT}" -r requirements.txt
 
-FROM public.ecr.aws/lambda/python3.14
+FROM public.ecr.aws/lambda/python:3.14
 
 # Copy the runtime dependencies from the builder stage with proper ownership
 COPY --from=builder --chown=1000:1000 ${LAMBDA_TASK_ROOT} ${LAMBDA_TASK_ROOT}
