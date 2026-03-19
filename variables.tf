@@ -136,7 +136,7 @@ variable "ecr_repo_name" {
 variable "ecr_repo_tag" {
   description = "The tag of the image in the ECR repository."
   type        = string
-  default     = "1.0.0"
+  default     = "1.0.3"
 }
 
 variable "ecr_owner_account_id" {
