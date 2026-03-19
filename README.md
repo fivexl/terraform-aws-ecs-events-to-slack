@@ -11,13 +11,13 @@
 
 =========================================================================
 
-# fivexl-opensource/terraform-aws-ecs-events-to-slack
+# terraform-aws-ecs-events-to-slack
 Rules for Amazon EventBridge that fetch ECS events and send them to Slack
 
 ## Example
 ```hcl
 module "ecs_to_slack" {
-  source            = "git::https://github.com/fivexl-opensource/terraform-aws-ecs-events-to-slack.git"
+  source            = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
   name              = "ecs-to-slack"
   slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
 }
@@ -34,7 +34,7 @@ Store your Slack webhook URL as a secret in AWS Secrets Manager:
 
 ```hcl
 module "ecs_to_slack" {
-  source                        = "git::https://github.com/fivexl-opensource/terraform-aws-ecs-events-to-slack.git"
+  source                        = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
   name                          = "ecs-to-slack"
   slack_webhook_url             = "slack-webhook-secret"  # Secrets Manager secret name
   slack_webhook_url_source_type = "secretsmanager"
@@ -52,7 +52,7 @@ Store your Slack webhook URL as a parameter in SSM Parameter Store:
 
 ```hcl
 module "ecs_to_slack" {
-  source                        = "git::https://github.com/fivexl-opensource/terraform-aws-ecs-events-to-slack.git"
+  source                        = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
   name                          = "ecs-to-slack"
   slack_webhook_url             = "/myapp/slack-webhook"  # SSM parameter path (must include leading /)
   slack_webhook_url_source_type = "ssm"
@@ -69,10 +69,84 @@ See: [`examples/simple-ssm`](./examples/simple-ssm/) for a complete example.
 - [Handling events with Lambda](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_cwet_handling.html)
 - [EventBridge Patterns](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-patterns.html)
 
+## Build Process
+
+There are three ways to build and deploy this module's Lambda function:
+
+1. Use pre-created images pulled from ECR (default).
+1. Build the image locally with Docker by setting `use_pre_created_image = false`.
+1. Use your own ECR repository by overriding the ECR-related variables.
+
+Example of using your own ECR repository:
+
+```hcl
+module "ecs_to_slack" {
+  source               = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
+  name                 = "ecs-to-slack"
+  slack_webhook_url    = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
+  ecr_repo_name        = "example_repo_name"
+  ecr_owner_account_id = "<example_account_id>"
+}
+```
+
+GitHub CI for this repository builds the Lambda Docker image for every release and publishes it to FivexL's private ECR. Users can use this pre-built Docker image as the default deployment path instead of building the image locally.
+
+ECR is private for the following reasons:
+
+- AWS Lambda can only use container images stored in ECR.
+- AWS Lambda cannot use public ECR images.
+- AWS Lambda does not support pulling container images from Amazon ECR through a pull-through cache rule, so users cannot rely on an intermediate private ECR that mirrors another registry such as GHCR.
+
+Images and repositories are replicated in every region supported by this module except:
+
+- `ap_east_1`
+- `eu_south_1`
+- `ap_southeast_3`
+- `af_south_1`
+- `me_south_1`
+- `il_central_1`
+- `me_central_1`
+- `eu_south_2`
+- `ap_south_2`
+- `eu_central_2`
+- `ap_southeast_4`
+- `ca_west_1`
+- `us_gov_east_1`
+- `us_gov_west_1`
+
+Those regions are not enabled by default. If you need support for a region that is not covered, please open an issue and we will add it.
+
 ## AWS Terraform provider versions
 
 * version 0.1.2 is the last version that works with both Terraform AWS provider v3 and v4. There are no plans to update 0.1.X branch.
 * all versions later (0.2.0 and above) require Terraform AWS provider v4 as a baseline
+
+## Upgrade note for `0.3.4` -> `1.0.x`
+
+When upgrading this module from `0.3.4` to `1.0.x`, the first deployment may fail because this release changes the Lambda packaging model from ZIP-based deployment to Docker image deployment, which causes the Lambda function to be re-created. Due to a Terraform AWS provider issue, the re-creation can fail if the old Lambda function still exists.
+
+If that happens, use one of these recovery options and run `terraform apply` again:
+
+1. Delete the existing Lambda function manually. The Lambda function name is the same as the module input `name`.
+
+```bash
+aws lambda delete-function --function-name "<module_name>"
+```
+
+Example:
+
+```bash
+aws lambda delete-function --function-name "ecs-to-slack"
+```
+
+1. Destroy and recreate the module:
+
+```bash
+terraform destroy -target=module.<module_name>
+terraform apply
+```
+
+If you prefer to remove the Lambda function first and keep the rest of the module managed by Terraform, delete only the Lambda function with the AWS CLI and then rerun `terraform apply`.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -137,4 +211,4 @@ No outputs.
 <!-- END_TF_DOCS -->
 
 ## Post review
-- Post review [url](https://github.com/fivexl-opensource/terraform-aws-ecs-events-to-slack/compare/review...main)
+- Post review [url](https://github.com/fivexl/terraform-aws-ecs-events-to-slack/compare/review...main)
