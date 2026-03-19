@@ -45,4 +45,4 @@ jobs:
           context: ./functions
           file: ./functions/Dockerfile
           push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/terraform-aws-ecs-events-to-slack:${{ steps.tag.outputs.image_tag }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/fivexl-opensource/terraform-aws-ecs-events-to-slack:${{ steps.tag.outputs.image_tag }}

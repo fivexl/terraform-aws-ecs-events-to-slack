@@ -11,13 +11,13 @@
 
 =========================================================================
 
-# terraform-aws-ecs-events-to-slack
+# fivexl-opensource/terraform-aws-ecs-events-to-slack
 Rules for Amazon EventBridge that fetch ECS events and send them to Slack
 
 ## Example
 ```hcl
 module "ecs_to_slack" {
-  source            = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
+  source            = "git::https://github.com/fivexl-opensource/terraform-aws-ecs-events-to-slack.git"
   name              = "ecs-to-slack"
   slack_webhook_url = "https://hooks.slack.com/YOUR-WEBHOOK-ID"
 }
@@ -34,7 +34,7 @@ Store your Slack webhook URL as a secret in AWS Secrets Manager:
 
 ```hcl
 module "ecs_to_slack" {
-  source                        = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
+  source                        = "git::https://github.com/fivexl-opensource/terraform-aws-ecs-events-to-slack.git"
   name                          = "ecs-to-slack"
   slack_webhook_url             = "slack-webhook-secret"  # Secrets Manager secret name
   slack_webhook_url_source_type = "secretsmanager"
@@ -52,7 +52,7 @@ Store your Slack webhook URL as a parameter in SSM Parameter Store:
 
 ```hcl
 module "ecs_to_slack" {
-  source                        = "git::https://github.com/fivexl/terraform-aws-ecs-events-to-slack.git"
+  source                        = "git::https://github.com/fivexl-opensource/terraform-aws-ecs-events-to-slack.git"
   name                          = "ecs-to-slack"
   slack_webhook_url             = "/myapp/slack-webhook"  # SSM parameter path (must include leading /)
   slack_webhook_url_source_type = "ssm"
@@ -113,7 +113,7 @@ See: [`examples/simple-ssm`](./examples/simple-ssm/) for a complete example.
 | <a name="input_create_role"></a> [create\_role](#input\_create\_role) | Controls whether IAM role for Lambda Function should be created | `bool` | `true` | no |
 | <a name="input_custom_event_rules"></a> [custom\_event\_rules](#input\_custom\_event\_rules) | A map of objects representing the custom EventBridge rule which will be created in addition to the default rules. | `any` | `{}` | no |
 | <a name="input_ecr_owner_account_id"></a> [ecr\_owner\_account\_id](#input\_ecr\_owner\_account\_id) | In what account is the ECR repository located. | `string` | `"222341826240"` | no |
-| <a name="input_ecr_repo_name"></a> [ecr\_repo\_name](#input\_ecr\_repo\_name) | The name of the ECR repository. | `string` | `"terraform-aws-ecs-events-to-slack"` | no |
+| <a name="input_ecr_repo_name"></a> [ecr\_repo\_name](#input\_ecr\_repo\_name) | The name of the ECR repository. | `string` | `"fivexl-opensource/terraform-aws-ecs-events-to-slack"` | no |
 | <a name="input_ecr_repo_tag"></a> [ecr\_repo\_tag](#input\_ecr\_repo\_tag) | The tag of the image in the ECR repository. | `string` | `"1.0.0"` | no |
 | <a name="input_ecs_deployment_state_event_rule_detail"></a> [ecs\_deployment\_state\_event\_rule\_detail](#input\_ecs\_deployment\_state\_event\_rule\_detail) | The content of the `detail` section in the EvenBridge Rule for `ECS Deployment State Change` events. Use it to filter the events which will be processed and sent to Slack. | `any` | <pre>{<br/>  "eventType": [<br/>    "ERROR"<br/>  ]<br/>}</pre> | no |
 | <a name="input_ecs_service_action_event_rule_detail"></a> [ecs\_service\_action\_event\_rule\_detail](#input\_ecs\_service\_action\_event\_rule\_detail) | The content of the `detail` section in the EvenBridge Rule for `ECS Service Action` events. Use it to filter the events which will be processed and sent to Slack. | `any` | <pre>{<br/>  "eventType": [<br/>    "WARN",<br/>    "ERROR"<br/>  ]<br/>}</pre> | no |
@@ -137,4 +137,4 @@ No outputs.
 <!-- END_TF_DOCS -->
 
 ## Post review
-- Post review [url](https://github.com/fivexl/terraform-aws-ecs-events-to-slack/compare/review...main)
+- Post review [url](https://github.com/fivexl-opensource/terraform-aws-ecs-events-to-slack/compare/review...main)

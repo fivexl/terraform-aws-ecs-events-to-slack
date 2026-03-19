@@ -130,7 +130,7 @@ variable "use_pre_created_image" {
 variable "ecr_repo_name" {
   description = "The name of the ECR repository."
   type        = string
-  default     = "terraform-aws-ecs-events-to-slack"
+  default     = "fivexl-opensource/terraform-aws-ecs-events-to-slack"
 }
 
 variable "ecr_repo_tag" {
