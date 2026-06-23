@@ -33,6 +33,16 @@ variable "lambda_role" {
   default     = ""
 }
 
+variable "lambda_policy_statements" {
+  description = <<EOT
+  Map of additional IAM policy statements to attach to the Lambda execution role.
+  Each key is a statement name; each value is a map with effect, actions, resources, and optional sid, not_actions, condition, principals, or not_principals.
+  Only applies when create_role is true. See terraform-aws-modules/lambda/aws policy_statements for the full schema.
+  EOT
+  type    = any
+  default = {}
+}
+
 variable "slack_webhook_url_source_type" {
   description = "Define where to get the slack webhook URL for variable slack_webhook_url. Either as text input or from an AWS secretsmanager lookup"
   validation {

@@ -97,6 +97,9 @@ module "slack_notifications" {
     var.slack_webhook_url_source_type == "ssm" ? data.aws_iam_policy_document.ssm[0].json : null
   )
 
+  attach_policy_statements = length(var.lambda_policy_statements) > 0
+  policy_statements        = var.lambda_policy_statements
+
   tags = var.tags
 }
 
