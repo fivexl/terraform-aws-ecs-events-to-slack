@@ -13,8 +13,6 @@ variable "slack_webhook_url" {
   type        = string
 }
 
-
-
 variable "role_name" {
   description = "The string which will be used for the name of Lambda IAM role"
   type        = string
@@ -39,8 +37,8 @@ variable "lambda_policy_statements" {
   Each key is a statement name; each value is a map with effect, actions, resources, and optional sid, not_actions, condition, principals, or not_principals.
   Only applies when create_role is true. See terraform-aws-modules/lambda/aws policy_statements for the full schema.
   EOT
-  type    = any
-  default = {}
+  type        = any
+  default     = {}
 }
 
 variable "slack_webhook_url_source_type" {
@@ -146,7 +144,7 @@ variable "ecr_repo_name" {
 variable "ecr_repo_tag" {
   description = "The tag of the image in the ECR repository."
   type        = string
-  default     = "1.0.3"
+  default     = "1.0.5"
 }
 
 variable "ecr_owner_account_id" {
