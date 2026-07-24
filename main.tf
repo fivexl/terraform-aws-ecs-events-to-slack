@@ -44,7 +44,7 @@ resource "aws_cloudwatch_event_target" "this" {
   for_each = local.event_rules
 
   target_id = "${var.name}-${each.key}"
-  arn       = module.slack_notifications.lambda_function_arn
+  arn       = module.slack_notifications.lambda_function_arn_static
   rule      = aws_cloudwatch_event_rule.this[each.key].name
 }
 
@@ -69,7 +69,6 @@ module "slack_notifications" {
   recreate_missing_package = var.recreate_missing_package
 
   timeout = 30
-  publish = true
 
   memory_size = var.lambda_memory_size
 
